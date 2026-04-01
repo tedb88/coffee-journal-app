@@ -90,7 +90,8 @@ function generateBrewGuide({ roastLevel = '', process: proc = '' }) {
 }
 
 function saveToJournal(coffeeData, imageDataUrl) {
-  const existing = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]')
+  let existing = []
+  try { existing = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]') } catch {}
   const entry = {
     id: Date.now().toString(),
     savedAt: new Date().toISOString(),
@@ -171,10 +172,15 @@ export default function LabelScanner({ onBrewSaved }) {
   }
 
   function handleNext() {
-    // Save to journal when user confirms the extracted data
-    if (result && preview) {
-      saveToJournal(result, preview)
-      onBrewSaved()
+    // Save to journal — wrapped in try/catch so a storage quota error never
+    // blocks the user from reaching the recipe step.
+    if (result) {
+      try {
+        saveToJournal(result, preview)
+        onBrewSaved()
+      } catch (e) {
+        console.warn('Could not save to journal:', e.message)
+      }
     }
     setStep('recipe')
   }
