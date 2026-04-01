@@ -1,18 +1,21 @@
 import { useState, useRef } from 'react'
 import { analyzeCoffeeLabel } from '../api.js'
+import {
+  IconCamera, IconUpload, IconArrowRight, IconRefresh,
+  IconGlobe, IconFlame, IconGear, IconLeaf, IconMountain, IconSparkle,
+  IconScale, IconDroplet, IconThermometer, IconClock, IconGrid, IconRuler,
+  IconLightbulb, IconCheck,
+} from './Icons.jsx'
 import './LabelScanner.css'
 
 const STORAGE_KEY = 'brewmap_journal'
-const MAX_DIM = 512   // 512px = 1 image tile on Anthropic API; 800px could be 4 tiles
+const MAX_DIM = 512
 
-// Accept images by MIME type OR file extension (HEIC files often have empty type in Chrome)
 function isImageFile(file) {
   if (file.type.startsWith('image/')) return true
   return /\.(jpe?g|png|gif|webp|heic|heif|avif|tiff?|bmp)$/i.test(file.name)
 }
 
-// Resize to max 800px before sending — cuts image token cost dramatically.
-// Falls back to raw bytes if the browser can't decode the format (e.g. HEIC in Chrome).
 function resizeImageForApi(file) {
   return new Promise((resolve, reject) => {
     const img = new Image()
@@ -24,8 +27,7 @@ function resizeImageForApi(file) {
       const w = Math.round(img.width * scale)
       const h = Math.round(img.height * scale)
       const canvas = document.createElement('canvas')
-      canvas.width  = w
-      canvas.height = h
+      canvas.width = w; canvas.height = h
       canvas.getContext('2d').drawImage(img, 0, 0, w, h)
       canvas.toBlob(blob => {
         if (!blob) { reject(new Error('Could not process image. Please try a JPEG or PNG.')); return }
@@ -40,11 +42,7 @@ function resizeImageForApi(file) {
       URL.revokeObjectURL(url)
       const isHeic = /heic|heif/i.test(file.type) || /\.(heic|heif)$/i.test(file.name)
       if (isHeic) {
-        reject(new Error(
-          'HEIC photos aren\'t supported by this browser. ' +
-          'On iPhone, go to Settings → Camera → Formats → Most Compatible to save as JPEG. ' +
-          'Or convert the file to JPEG before uploading.'
-        ))
+        reject(new Error('HEIC photos aren\'t supported by this browser. On iPhone, go to Settings → Camera → Formats → Most Compatible to save as JPEG.'))
       } else {
         reject(new Error('Could not decode this image. Please try a JPEG or PNG file.'))
       }
@@ -54,9 +52,8 @@ function resizeImageForApi(file) {
   })
 }
 
-// Generate brew guide client-side — saves ~400 output tokens per API call
 function generateBrewGuide({ roastLevel = '', process: proc = '' }) {
-  const r  = roastLevel.toLowerCase()
+  const r = roastLevel.toLowerCase()
   const isLight  = r.includes('light')
   const isDark   = r.includes('dark')
   const isNatural = /natural|honey|anaerobic/i.test(proc)
@@ -74,12 +71,8 @@ function generateBrewGuide({ roastLevel = '', process: proc = '' }) {
         : 'Pre-rinse your filter with hot water and use filtered water for the cleanest cup.'
 
   return {
-    coffeeAmount: '15g',
-    waterAmount:  '240ml',
-    ratio:        '1:16',
-    waterTemp:    temp,
-    grindSize:    grind,
-    totalTime:    total,
+    coffeeAmount: '15g', waterAmount: '240ml', ratio: '1:16',
+    waterTemp: temp, grindSize: grind, totalTime: total,
     steps: [
       { name: 'Bloom',      water: '30ml',  waitUntil: '0:30', notes: 'Saturate grounds in a slow spiral. Let the bloom fully settle.' },
       { name: 'First Pour', water: '105ml', waitUntil: '1:30', notes: 'Steady circular pour from centre outward. Keep grounds submerged.' },
@@ -113,9 +106,7 @@ function ProgressBar({ current }) {
         const active = n === current
         return (
           <div key={label} className="scan-progress-track">
-            {i > 0 && (
-              <div className={`scan-progress-line${done || active ? ' lit' : ''}`} />
-            )}
+            {i > 0 && <div className={`scan-progress-line${done || active ? ' lit' : ''}`} />}
             <div className="scan-progress-step">
               <div className={`scan-dot${done ? ' done' : active ? ' active' : ''}`}>
                 {done ? '✓' : n}
@@ -131,13 +122,12 @@ function ProgressBar({ current }) {
 
 /* ===== Main Component ===== */
 export default function LabelScanner({ onBrewSaved }) {
-  // step: 'upload' | 'loading' | 'confirm' | 'recipe'
-  const [step, setStep]           = useState('upload')
-  const [preview, setPreview]     = useState(null)
+  const [step, setStep]                   = useState('upload')
+  const [preview, setPreview]             = useState(null)
   const [previewFailed, setPreviewFailed] = useState(false)
   const [pendingFile, setPendingFile]     = useState(null)
-  const [result, setResult]       = useState(null)
-  const [error, setError]         = useState(null)
+  const [result, setResult]               = useState(null)
+  const [error, setError]                 = useState(null)
   const fileInputRef   = useRef(null)
   const cameraInputRef = useRef(null)
 
@@ -172,8 +162,6 @@ export default function LabelScanner({ onBrewSaved }) {
   }
 
   function handleNext() {
-    // Save to journal — wrapped in try/catch so a storage quota error never
-    // blocks the user from reaching the recipe step.
     if (result) {
       try {
         saveToJournal(result, preview)
@@ -186,12 +174,8 @@ export default function LabelScanner({ onBrewSaved }) {
   }
 
   function handleReset() {
-    setStep('upload')
-    setPreview(null)
-    setPreviewFailed(false)
-    setPendingFile(null)
-    setResult(null)
-    setError(null)
+    setStep('upload'); setPreview(null); setPreviewFailed(false)
+    setPendingFile(null); setResult(null); setError(null)
     if (fileInputRef.current)   fileInputRef.current.value = ''
     if (cameraInputRef.current) cameraInputRef.current.value = ''
   }
@@ -207,20 +191,20 @@ export default function LabelScanner({ onBrewSaved }) {
         <>
           {!preview ? (
             <div className="upload-area">
-              <div className="upload-icon">☕</div>
+              <div className="upload-icon">
+                <IconCamera size={32} />
+              </div>
               <p className="upload-hint">
                 Point your camera at a coffee bag label or upload a photo.
                 <br />
-                <span className="upload-hint-small">
-                  AI will extract details and build your brew guide.
-                </span>
+                <span className="upload-hint-small">AI will extract details and build your brew guide.</span>
               </p>
               <div className="upload-buttons">
                 <button className="btn-primary" onClick={() => cameraInputRef.current?.click()}>
-                  📸 Take Photo
+                  <IconCamera size={16} /> Take Photo
                 </button>
                 <button className="btn-secondary" onClick={() => fileInputRef.current?.click()}>
-                  🖼️ Upload Image
+                  <IconUpload size={16} /> Upload Image
                 </button>
               </div>
             </div>
@@ -228,7 +212,7 @@ export default function LabelScanner({ onBrewSaved }) {
             <div className="preview-card card">
               {previewFailed ? (
                 <div className="preview-placeholder">
-                  <span>📸</span>
+                  <IconCamera size={36} style={{ color: 'var(--text-secondary)', opacity: 0.4 }} />
                   <p>{pendingFile?.name ?? 'Image selected'}</p>
                   <p className="preview-placeholder-hint">Preview unavailable — tap Analyse to continue</p>
                 </div>
@@ -238,10 +222,10 @@ export default function LabelScanner({ onBrewSaved }) {
               )}
               <div className="preview-footer">
                 <button className="btn-go" onClick={handleGo}>
-                  Analyse Label →
+                  Analyse Label <IconArrowRight size={16} />
                 </button>
                 <button className="btn-secondary" onClick={handleReset}>
-                  Retake
+                  <IconRefresh size={15} /> Retake
                 </button>
               </div>
             </div>
@@ -267,30 +251,32 @@ export default function LabelScanner({ onBrewSaved }) {
 
       {error && <div className="error-box">{error}</div>}
 
-      {/* STEP 2 — Confirm extracted info */}
+      {/* STEP 2 — Confirm */}
       {step === 'confirm' && result && (
         <ConfirmCard data={result} preview={preview} onNext={handleNext} onReset={handleReset} />
       )}
 
-      {/* STEP 3 — Brew recipe */}
+      {/* STEP 3 — Recipe */}
       {step === 'recipe' && result && (
         <RecipeCard data={result} preview={preview} onReset={handleReset} />
       )}
+
+      <footer className="section-footer">Made by tedb88</footer>
     </section>
   )
 }
 
-/* ===== Step 2: Confirm extracted label info ===== */
+/* ===== Step 2: Confirm ===== */
 function ConfirmCard({ data, preview, onNext, onReset }) {
   const { name, origin, region, roastLevel, process, tastingNotes, variety, altitude } = data
 
   const fields = [
-    origin     && { icon: '🌍', label: 'Origin',        value: origin + (region ? ` · ${region}` : '') },
-    roastLevel && { icon: '🔥', label: 'Roast',         value: roastLevel },
-    process    && { icon: '⚙️', label: 'Process',       value: process },
-    variety    && { icon: '🌱', label: 'Variety',        value: variety },
-    altitude   && { icon: '🏔️', label: 'Altitude',      value: altitude },
-    tastingNotes?.length > 0 && { icon: '✦', label: 'Tasting Notes', value: tastingNotes.join(' · ') },
+    origin      && { Icon: IconGlobe,    label: 'Origin',        value: origin + (region ? ` · ${region}` : '') },
+    roastLevel  && { Icon: IconFlame,    label: 'Roast',         value: roastLevel },
+    process     && { Icon: IconGear,     label: 'Process',       value: process },
+    variety     && { Icon: IconLeaf,     label: 'Variety',       value: variety },
+    altitude    && { Icon: IconMountain, label: 'Altitude',      value: altitude },
+    tastingNotes?.length > 0 && { Icon: IconSparkle, label: 'Tasting Notes', value: tastingNotes.join(' · ') },
   ].filter(Boolean)
 
   return (
@@ -304,9 +290,9 @@ function ConfirmCard({ data, preview, onNext, onReset }) {
       </div>
 
       <ul className="confirm-fields">
-        {fields.map(({ icon, label, value }) => (
+        {fields.map(({ Icon, label, value }) => (
           <li key={label} className="confirm-field">
-            <span className="confirm-field-icon">{icon}</span>
+            <span className="confirm-field-icon"><Icon size={14} /></span>
             <div className="confirm-field-body">
               <span className="confirm-field-label">{label}</span>
               <span className="confirm-field-value">{value}</span>
@@ -319,10 +305,10 @@ function ConfirmCard({ data, preview, onNext, onReset }) {
         <p className="confirm-question">Does this look correct?</p>
         <div className="confirm-actions">
           <button className="btn-primary" onClick={onNext}>
-            Confirm &amp; see recipe →
+            Confirm &amp; see recipe <IconArrowRight size={15} />
           </button>
           <button className="btn-secondary" onClick={onReset}>
-            Start over
+            <IconRefresh size={14} /> Start over
           </button>
         </div>
       </div>
@@ -330,7 +316,7 @@ function ConfirmCard({ data, preview, onNext, onReset }) {
   )
 }
 
-/* ===== Step 3: Brew recipe ===== */
+/* ===== Step 3: Recipe ===== */
 function RecipeCard({ data, preview, onReset }) {
   const { name, brewGuide } = data
 
@@ -339,7 +325,7 @@ function RecipeCard({ data, preview, onReset }) {
       <div className="brew-guide-header">
         {preview && <img src={preview} alt={name} className="brew-guide-thumb" />}
         <div className="brew-guide-meta">
-          <div className="saved-inline-badge">✓ Saved to Journal</div>
+          <div className="saved-inline-badge"><IconCheck size={12} /> Saved to Journal</div>
           <h2 className="brew-guide-name">{name || 'Unknown Coffee'}</h2>
           <p className="brew-recipe-subtitle">Your personalised pour-over guide</p>
         </div>
@@ -347,19 +333,19 @@ function RecipeCard({ data, preview, onReset }) {
 
       {brewGuide && (
         <div className="brew-guide-body">
-          <h3 className="brew-section-title">☕ Hand-Drip Brew Guide</h3>
+          <h3 className="brew-section-title">Hand-Drip Brew Guide</h3>
 
           <div className="brew-params">
             {[
-              { icon: '⚖️', label: 'Coffee',     value: brewGuide.coffeeAmount },
-              { icon: '💧', label: 'Water',      value: brewGuide.waterAmount },
-              { icon: '📐', label: 'Ratio',      value: brewGuide.ratio },
-              { icon: '🌡️', label: 'Temp',       value: brewGuide.waterTemp },
-              { icon: '🔘', label: 'Grind',      value: brewGuide.grindSize },
-              { icon: '⏱️', label: 'Total Time', value: brewGuide.totalTime },
-            ].map(({ icon, label, value }) => value ? (
+              { Icon: IconScale,       label: 'Coffee',     value: brewGuide.coffeeAmount },
+              { Icon: IconDroplet,     label: 'Water',      value: brewGuide.waterAmount },
+              { Icon: IconRuler,       label: 'Ratio',      value: brewGuide.ratio },
+              { Icon: IconThermometer, label: 'Temp',       value: brewGuide.waterTemp },
+              { Icon: IconGrid,        label: 'Grind',      value: brewGuide.grindSize },
+              { Icon: IconClock,       label: 'Total Time', value: brewGuide.totalTime },
+            ].map(({ Icon, label, value }) => value ? (
               <div key={label} className="brew-param">
-                <span className="brew-param-icon">{icon}</span>
+                <span className="brew-param-icon"><Icon size={15} /></span>
                 <span className="brew-param-label">{label}</span>
                 <span className="brew-param-value">{value}</span>
               </div>
@@ -376,8 +362,8 @@ function RecipeCard({ data, preview, onReset }) {
                       <span className="step-number">{i + 1}</span>
                       <span className="step-name">{s.name}</span>
                       <span className="step-meta">
-                        {s.water     && <span className="step-water">💧 {s.water}</span>}
-                        {s.waitUntil && <span className="step-time">⏱ until {s.waitUntil}</span>}
+                        {s.water     && <span className="step-water"><IconDroplet size={11} /> {s.water}</span>}
+                        {s.waitUntil && <span className="step-time"><IconClock size={11} /> until {s.waitUntil}</span>}
                       </span>
                     </div>
                     {s.notes && <p className="step-notes">{s.notes}</p>}
@@ -389,7 +375,7 @@ function RecipeCard({ data, preview, onReset }) {
 
           {brewGuide.tips && (
             <div className="brew-tip">
-              <span className="brew-tip-icon">💡</span>
+              <span className="brew-tip-icon"><IconLightbulb size={15} /></span>
               <span>{brewGuide.tips}</span>
             </div>
           )}
@@ -398,7 +384,7 @@ function RecipeCard({ data, preview, onReset }) {
 
       <div className="brew-guide-actions">
         <button className="btn-secondary" onClick={onReset}>
-          📷 Scan Another Label
+          <IconCamera size={15} /> Scan Another Label
         </button>
       </div>
     </article>

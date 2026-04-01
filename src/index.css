@@ -10,11 +10,11 @@
 /* ===== Design Tokens ===== */
 :root {
   --bg:             #FFFFFF;
-  --bg-subtle:      #F8F9FB;
-  --bg-page:        #EEF2F7;
-  --gradient:       linear-gradient(135deg, #3B82F6 0%, #F97316 100%);
-  --blue:           #3B82F6;
-  --orange:         #F97316;
+  --bg-subtle:      #F7FBFF;
+  --bg-page:        #EBF5FF;
+  --gradient:       linear-gradient(135deg, #A3E635 0%, #38BDF8 100%);
+  --lime:           #A3E635;
+  --sky:            #38BDF8;
   --text-primary:   #0F172A;
   --text-secondary: #64748B;
   --card-border:    #E2E8F0;
@@ -22,9 +22,9 @@
   --success:        #22C55E;
   --shadow:         0 2px 16px rgba(15, 23, 42, 0.06);
   --shadow-md:      0 4px 24px rgba(15, 23, 42, 0.10);
-  --radius-sm:      8px;
-  --radius:         16px;
-  --radius-lg:      24px;
+  --radius-sm:      6px;
+  --radius:         12px;
+  --radius-lg:      18px;
   --radius-full:    9999px;
   --transition:     0.2s ease;
 }
@@ -37,13 +37,59 @@ html {
 
 body {
   font-family: 'DM Sans', system-ui, sans-serif;
-  background-color: var(--bg-page);
+  /* silver-white base */
+  background-color: #E8EEF4;
+  background-image:
+    /* dot grid in silver */
+    radial-gradient(circle, rgba(180, 200, 220, 0.35) 1px, transparent 1px),
+    /* silver sheen sweep — diagonal highlight */
+    linear-gradient(120deg, rgba(255,255,255,0.0) 30%, rgba(220,230,240,0.55) 50%, rgba(255,255,255,0.0) 70%),
+    /* lime orb — top-left */
+    radial-gradient(ellipse 55% 45% at 12% 15%, rgba(163, 230, 53, 0.18) 0%, transparent 65%),
+    /* sky orb — bottom-right */
+    radial-gradient(ellipse 60% 50% at 88% 85%, rgba(56, 189, 248, 0.18) 0%, transparent 65%),
+    /* silver highlight — centre */
+    radial-gradient(ellipse 70% 40% at 50% 50%, rgba(240, 245, 255, 0.6) 0%, transparent 70%),
+    /* silver orb — top-right */
+    radial-gradient(ellipse 40% 30% at 90% 5%,  rgba(200, 215, 230, 0.45) 0%, transparent 60%),
+    /* lime accent — bottom-left */
+    radial-gradient(ellipse 30% 25% at 6%  92%,  rgba(163, 230, 53, 0.10) 0%, transparent 60%);
+  background-size: 26px 26px, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%;
+  background-attachment: fixed;
   color: var(--text-primary);
   min-height: 100vh;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  position: relative;
 }
+
+/* Metallic scanlines — diagonal silver streaks */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    repeating-linear-gradient(
+      105deg,
+      transparent,
+      transparent 60px,
+      rgba(255, 255, 255, 0.04) 60px,
+      rgba(255, 255, 255, 0.04) 61px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 4px,
+      rgba(200, 215, 230, 0.025) 4px,
+      rgba(200, 215, 230, 0.025) 5px
+    );
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Ensure card sits above pseudo-element */
+#root { position: relative; z-index: 1; }
 
 h1, h2, h3, h4, h5, h6 {
   font-family: 'Syne', system-ui, sans-serif;
@@ -65,9 +111,9 @@ img {
 }
 
 /* ===== Scrollbar ===== */
-::-webkit-scrollbar          { width: 5px; }
+::-webkit-scrollbar          { width: 4px; }
 ::-webkit-scrollbar-track    { background: var(--bg-subtle); }
-::-webkit-scrollbar-thumb    { background: var(--card-border); border-radius: 3px; }
+::-webkit-scrollbar-thumb    { background: var(--card-border); border-radius: 2px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
 
 /* ===== Utility ===== */

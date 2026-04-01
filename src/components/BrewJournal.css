@@ -6,9 +6,11 @@
 }
 
 .journal-empty-icon {
-  font-size: 3rem;
+  color: var(--text-secondary);
+  opacity: 0.35;
   margin-bottom: 0.85rem;
-  opacity: 0.6;
+  display: flex;
+  justify-content: center;
 }
 
 .journal-empty p {
@@ -31,7 +33,7 @@
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 0.85rem;
+  gap: 0.75rem;
 }
 
 /* ===== Journal Entry Card ===== */
@@ -39,8 +41,7 @@
   padding: 0;
   overflow: hidden;
   box-shadow: 0 2px 16px rgba(15, 23, 42, 0.06);
-  transition: box-shadow 0.2s ease, transform 0.2s ease;
-  /* Staggered fade-in */
+  transition: box-shadow 0.2s ease;
   animation: fadeUp 0.3s ease both;
 }
 
@@ -55,9 +56,7 @@
 .journal-entry:nth-child(9)  { animation-delay: 0.27s; }
 .journal-entry:nth-child(10) { animation-delay: 0.30s; }
 
-.journal-entry:hover {
-  box-shadow: 0 4px 24px rgba(15, 23, 42, 0.10);
-}
+.journal-entry:hover { box-shadow: 0 4px 24px rgba(15, 23, 42, 0.10); }
 
 /* ===== Entry Header ===== */
 .journal-entry-header {
@@ -68,18 +67,15 @@
 }
 
 .journal-thumb {
-  width: 68px;
-  height: 68px;
+  width: 64px;
+  height: 64px;
   object-fit: cover;
   border-radius: var(--radius-sm);
   border: 1px solid var(--card-border);
   flex-shrink: 0;
 }
 
-.journal-entry-info {
-  flex: 1;
-  min-width: 0;
-}
+.journal-entry-info { flex: 1; min-width: 0; }
 
 .journal-entry-name {
   font-family: 'Syne', sans-serif;
@@ -101,13 +97,16 @@
 
 .je-tag {
   font-family: 'DM Sans', sans-serif;
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 600;
-  background: #EFF6FF;
-  color: var(--blue);
+  background: #F0F9FF;
+  color: var(--sky);
   padding: 0.15rem 0.45rem;
   border-radius: var(--radius-full);
-  border: 1px solid #BFDBFE;
+  border: 1px solid #BAE6FD;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
 }
 
 .journal-tasting-notes {
@@ -121,17 +120,17 @@
   text-overflow: ellipsis;
 }
 
-/* Date as gradient pill */
 .journal-entry-date {
   display: inline-flex;
   align-items: center;
   font-family: 'DM Sans', sans-serif;
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 600;
   background: var(--gradient);
   color: white;
   padding: 0.15rem 0.55rem;
   border-radius: var(--radius-full);
+  letter-spacing: 0.01em;
 }
 
 /* ===== Entry Actions ===== */
@@ -143,31 +142,31 @@
   flex-shrink: 0;
 }
 
-/* Expand/collapse chevron button */
 .btn-expand {
   background: var(--bg-subtle);
   border: 1.5px solid var(--card-border);
   color: var(--text-secondary);
-  padding: 0.35rem 0.7rem;
+  padding: 0.35rem 0.65rem;
   border-radius: var(--radius-full);
   font-family: 'DM Sans', sans-serif;
-  font-size: 0.74rem;
+  font-size: 0.72rem;
   font-weight: 600;
   white-space: nowrap;
   transition: all 0.2s ease;
-  min-height: 32px;
+  min-height: 30px;
   display: flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: 0.2rem;
+  letter-spacing: 0.03em;
 }
 
 .btn-expand:hover {
-  border-color: var(--blue);
-  color: var(--blue);
-  background: #EFF6FF;
+  border-color: var(--sky);
+  color: var(--sky);
+  background: #F0F9FF;
 }
 
-/* ===== Inline Brew Guide (expanded) ===== */
+/* ===== Inline Brew Guide ===== */
 .journal-brew-guide {
   border-top: 1px solid var(--card-border);
   background: var(--bg-subtle);
@@ -178,30 +177,30 @@
 .jbg-params {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem;
+  gap: 0.35rem;
   margin-bottom: 0.9rem;
 }
 
 .jbg-param {
   display: flex;
   align-items: center;
-  gap: 0.3rem;
+  gap: 0.28rem;
   background: var(--bg);
   border: 1px solid var(--card-border);
   border-radius: var(--radius-full);
-  padding: 0.2rem 0.65rem;
+  padding: 0.18rem 0.6rem;
   font-size: 0.76rem;
 }
 
+.jbg-param-icon { color: var(--sky); display: flex; align-items: center; }
 .jbg-param-label {
   font-family: 'DM Sans', sans-serif;
   color: var(--text-secondary);
-  font-size: 0.68rem;
+  font-size: 0.66rem;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
 }
-
 .jbg-param-value {
   font-family: 'DM Sans', sans-serif;
   font-weight: 700;
@@ -213,14 +212,14 @@
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 0.45rem;
+  gap: 0.4rem;
   margin-bottom: 0.75rem;
 }
 
 .jbg-step {
   background: var(--bg);
   border-radius: var(--radius-sm);
-  border-left: 3px solid var(--blue);
+  border-left: 2.5px solid var(--lime);
   padding: 0.6rem 0.9rem;
   border-top: 1px solid var(--card-border);
   border-right: 1px solid var(--card-border);
@@ -238,11 +237,11 @@
 .jbg-step-num {
   background: var(--gradient);
   color: white;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
+  width: 17px;
+  height: 17px;
+  border-radius: var(--radius-sm);
   font-family: 'DM Sans', sans-serif;
-  font-size: 0.62rem;
+  font-size: 0.6rem;
   font-weight: 700;
   display: flex;
   align-items: center;
@@ -252,13 +251,16 @@
 
 .jbg-chip {
   font-family: 'DM Sans', sans-serif;
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 500;
   background: var(--bg-subtle);
   color: var(--text-secondary);
   padding: 0.1rem 0.38rem;
   border-radius: var(--radius-full);
   border: 1px solid var(--card-border);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
 }
 
 .jbg-step strong {
@@ -276,26 +278,23 @@
 }
 
 .jbg-tip {
-  background: #FFFBEB;
-  border: 1px solid #FDE68A;
+  background: #F0F9FF;
+  border: 1px solid #BAE6FD;
   border-radius: var(--radius-sm);
   padding: 0.65rem 0.9rem;
   font-family: 'DM Sans', sans-serif;
   font-size: 0.8rem;
-  color: #92400E;
+  color: #0C4A6E;
   line-height: 1.5;
+  display: flex;
+  gap: 0.4rem;
+  align-items: flex-start;
 }
+
+.jbg-tip-icon { color: var(--sky); display: flex; align-items: center; flex-shrink: 0; margin-top: 1px; }
 
 /* ===== Responsive ===== */
 @media (max-width: 500px) {
-  .journal-entry-header {
-    flex-wrap: wrap;
-  }
-
-  .journal-entry-actions {
-    flex-direction: row;
-    width: 100%;
-    justify-content: flex-end;
-    align-items: center;
-  }
+  .journal-entry-header { flex-wrap: wrap; }
+  .journal-entry-actions { flex-direction: row; width: 100%; justify-content: flex-end; align-items: center; }
 }

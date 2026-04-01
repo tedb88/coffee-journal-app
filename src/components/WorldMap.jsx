@@ -1,9 +1,9 @@
 import { useEffect, useState, useRef } from 'react'
+import { IconGlobe, IconMapPin } from './Icons.jsx'
 import './WorldMap.css'
 
 const STORAGE_KEY = 'brewmap_journal'
 
-// Static lat/lng for common coffee-producing countries
 const COUNTRY_COORDS = {
   'Ethiopia':             [9.145,  40.489],
   'Colombia':             [4.571,  -74.297],
@@ -61,11 +61,9 @@ const COUNTRY_COORDS = {
 function normalizeCountry(raw) {
   if (!raw) return null
   const trimmed = raw.trim()
-  // Try direct lookup
   for (const key of Object.keys(COUNTRY_COORDS)) {
     if (key.toLowerCase() === trimmed.toLowerCase()) return key
   }
-  // Fuzzy: starts-with
   for (const key of Object.keys(COUNTRY_COORDS)) {
     if (
       trimmed.toLowerCase().startsWith(key.toLowerCase()) ||
@@ -76,32 +74,25 @@ function normalizeCountry(raw) {
 }
 
 function loadJournal() {
-  try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]')
-  } catch {
-    return []
-  }
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]') } catch { return [] }
 }
 
 export default function WorldMap({ journalVersion }) {
-  const mapRef       = useRef(null)   // DOM node
-  const leafletRef   = useRef(null)   // Leaflet map instance
-  const markersRef   = useRef([])     // current markers
-  const [unmapped, setUnmapped] = useState([])
+  const mapRef     = useRef(null)
+  const leafletRef = useRef(null)
+  const markersRef = useRef([])
+  const [unmapped, setUnmapped]   = useState([])
   const [totalPins, setTotalPins] = useState(0)
 
-  // Initialize map once
   useEffect(() => {
     let isMounted = true
 
     async function init() {
-      // Dynamically import Leaflet (avoids SSR issues and keeps bundle lean)
       const L = (await import('leaflet')).default
       await import('leaflet/dist/leaflet.css')
 
       if (!isMounted || !mapRef.current) return
 
-      // Fix default icon path issue with Vite/webpack
       delete L.Icon.Default.prototype._getIconUrl
       L.Icon.Default.mergeOptions({
         iconRetinaUrl: new URL('leaflet/dist/images/marker-icon-2x.png', import.meta.url).href,
@@ -109,13 +100,9 @@ export default function WorldMap({ journalVersion }) {
         shadowUrl:     new URL('leaflet/dist/images/marker-shadow.png', import.meta.url).href,
       })
 
-      if (leafletRef.current) return  // already initialized
+      if (leafletRef.current) return
 
-      const map = L.map(mapRef.current, {
-        center: [15, 20],
-        zoom: 2,
-        scrollWheelZoom: true,
-      })
+      const map = L.map(mapRef.current, { center: [15, 20], zoom: 2, scrollWheelZoom: true })
 
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
@@ -130,7 +117,6 @@ export default function WorldMap({ journalVersion }) {
     return () => { isMounted = false }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Re-render markers when journal changes
   useEffect(() => {
     if (leafletRef.current) renderMarkers()
   }, [journalVersion]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -139,11 +125,9 @@ export default function WorldMap({ journalVersion }) {
     const { L, map } = leafletRef.current
     const entries = loadJournal()
 
-    // Clear existing markers
     markersRef.current.forEach(m => m.remove())
     markersRef.current = []
 
-    // Group by resolved country
     const byCountry = {}
     const missed = []
 
@@ -160,13 +144,12 @@ export default function WorldMap({ journalVersion }) {
     setUnmapped([...new Set(missed)])
     setTotalPins(Object.keys(byCountry).length)
 
-    // Custom coffee-cup icon
     const coffeeIcon = L.divIcon({
       className: '',
-      html: `<div class="map-pin">☕</div>`,
-      iconSize: [36, 36],
-      iconAnchor: [18, 36],
-      popupAnchor: [0, -36],
+      html: `<div class="map-pin"></div>`,
+      iconSize: [16, 16],
+      iconAnchor: [8, 8],
+      popupAnchor: [0, -12],
     })
 
     for (const [country, coffees] of Object.entries(byCountry)) {
@@ -175,7 +158,7 @@ export default function WorldMap({ journalVersion }) {
 
       const popupHtml = `
         <div class="map-popup">
-          <div class="map-popup-country">🌍 ${country}</div>
+          <div class="map-popup-country">${country}</div>
           <ul class="map-popup-list">
             ${coffees.map(c => `
               <li>
@@ -197,7 +180,8 @@ export default function WorldMap({ journalVersion }) {
   return (
     <section className="map-section">
       <h2 className="section-heading">
-        <span>🗺️</span> Coffee Origins
+        <span className="section-heading-icon"><IconGlobe size={20} /></span>
+        Coffee Origins
         {totalPins > 0 && (
           <span className="journal-count">{totalPins} {totalPins === 1 ? 'country' : 'countries'}</span>
         )}
@@ -205,7 +189,7 @@ export default function WorldMap({ journalVersion }) {
 
       {entries.length === 0 ? (
         <div className="card map-empty">
-          <div style={{ fontSize: '3rem', marginBottom: '0.75rem' }}>🗺️</div>
+          <div className="map-empty-icon"><IconMapPin size={36} /></div>
           <p>No coffees in your journal yet.</p>
           <p className="journal-empty-hint">
             Scan a label and save it — its origin country will appear as a pin on the map.
@@ -222,6 +206,8 @@ export default function WorldMap({ journalVersion }) {
           )}
         </>
       )}
+
+      <footer className="section-footer">Made by tedb88</footer>
     </section>
   )
 }

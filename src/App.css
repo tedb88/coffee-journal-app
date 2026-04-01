@@ -1,4 +1,4 @@
-/* ===== App Shell — mobile-first 480px card ===== */
+/* ===== App Shell ===== */
 .app {
   min-height: 100vh;
   display: flex;
@@ -6,31 +6,61 @@
   background: var(--bg);
   max-width: 480px;
   margin: 0 auto;
-  box-shadow: 0 0 80px rgba(15, 23, 42, 0.18);
+  box-shadow:
+    0 0 0 1px rgba(220, 230, 245, 0.9),
+    0 0 0 2px rgba(163, 230, 53, 0.10),
+    0 8px 40px rgba(15, 23, 42, 0.12),
+    0 2px 80px rgba(56, 189, 248, 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
   position: relative;
 }
 
 /* ===== Header ===== */
 .app-header {
   background: var(--bg);
-  padding: 1.25rem 1.25rem 0;
   border-bottom: 1px solid var(--card-border);
   box-shadow: 0 2px 12px rgba(15, 23, 42, 0.04);
   position: sticky;
   top: 0;
   z-index: 100;
+  overflow: hidden;
+}
+
+/* Banner with illustration */
+.header-banner {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(160deg, #F0F7FF 0%, #F8FDF8 50%, #F0F9FF 100%);
+  border-bottom: 1px solid rgba(200, 215, 235, 0.5);
+}
+
+.header-illustration {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
 }
 
 .header-top {
+  position: relative;
+  z-index: 2;
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  margin-bottom: 1rem;
+  padding: 1.1rem 1.25rem 1rem;
 }
 
 .header-logo {
-  font-size: 1.8rem;
-  line-height: 1;
+  width: 32px;
+  height: 32px;
+  background: var(--gradient);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  flex-shrink: 0;
 }
 
 .header-title {
@@ -49,14 +79,15 @@
   font-size: 0.7rem;
   color: var(--text-secondary);
   margin-top: 3px;
-  letter-spacing: 0.01em;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
 }
 
 /* ===== Tab Navigation ===== */
 .tab-nav {
   display: flex;
   gap: 0.35rem;
-  padding-bottom: 1rem;
+  padding: 0.75rem 1.25rem 0.85rem;
 }
 
 .tab-btn {
@@ -76,24 +107,25 @@
   transition: all 0.2s ease;
   min-height: 44px;
   white-space: nowrap;
-  letter-spacing: 0.01em;
+  letter-spacing: 0.02em;
 }
 
 .tab-btn:hover:not(.active) {
-  border-color: var(--blue);
-  color: var(--blue);
-  background: #EFF6FF;
+  border-color: var(--sky);
+  color: var(--sky);
+  background: #F0F9FF;
 }
 
 .tab-btn.active {
   background: var(--gradient);
   color: white;
   border-color: transparent;
-  box-shadow: 0 2px 12px rgba(59, 130, 246, 0.28);
+  box-shadow: 0 2px 12px rgba(56, 189, 248, 0.28);
 }
 
 .tab-btn .tab-icon {
-  font-size: 0.88rem;
+  display: flex;
+  align-items: center;
 }
 
 /* ===== Main Content ===== */
@@ -115,7 +147,13 @@
   letter-spacing: -0.01em;
 }
 
-/* Count pill inside section headings */
+.section-heading-icon {
+  color: var(--sky);
+  display: flex;
+  align-items: center;
+}
+
+/* Count pill */
 .journal-count {
   font-family: 'DM Sans', sans-serif;
   font-size: 0.72rem;
@@ -125,6 +163,7 @@
   padding: 0.15rem 0.6rem;
   border-radius: var(--radius-full);
   margin-left: 0.1rem;
+  letter-spacing: 0.02em;
 }
 
 /* ===== Card Base ===== */
@@ -147,20 +186,19 @@
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
-  box-shadow: 0 2px 14px rgba(59, 130, 246, 0.32);
+  box-shadow: 0 2px 14px rgba(56, 189, 248, 0.32);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   min-height: 48px;
   border: none;
+  letter-spacing: 0.01em;
 }
 
 .btn-primary:hover {
   transform: scale(1.03);
-  box-shadow: 0 4px 22px rgba(59, 130, 246, 0.42);
+  box-shadow: 0 4px 22px rgba(56, 189, 248, 0.42);
 }
 
-.btn-primary:active {
-  transform: scale(0.98);
-}
+.btn-primary:active  { transform: scale(0.98); }
 
 .btn-primary:disabled {
   opacity: 0.48;
@@ -183,6 +221,7 @@
   align-items: center;
   gap: 0.4rem;
   transition: all 0.2s ease;
+  letter-spacing: 0.01em;
 }
 
 .btn-secondary:hover {
@@ -194,12 +233,11 @@
   background: transparent;
   color: var(--text-secondary);
   padding: 0;
-  border-radius: 50%;
-  font-size: 1.05rem;
+  border-radius: var(--radius-sm);
   border: none;
   opacity: 0.45;
-  min-height: 40px;
-  min-width: 40px;
+  min-height: 36px;
+  min-width: 36px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -223,10 +261,10 @@
 }
 
 .spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid var(--card-border);
-  border-top-color: var(--blue);
+  width: 36px;
+  height: 36px;
+  border: 2px solid var(--card-border);
+  border-top-color: var(--lime);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -250,7 +288,19 @@
   margin-top: 1rem;
 }
 
-/* ===== Tab content: fade-up on mount ===== */
+/* ===== Section footer ===== */
+.section-footer {
+  text-align: center;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.65rem;
+  color: var(--text-secondary);
+  opacity: 0.45;
+  margin-top: 2.5rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* ===== Tab content ===== */
 .scanner-section,
 .journal-section,
 .map-section {
@@ -259,15 +309,7 @@
 
 /* ===== Responsive ===== */
 @media (max-width: 500px) {
-  .app {
-    box-shadow: none;
-  }
-
-  .app-main {
-    padding-bottom: 4rem;
-  }
-
-  .tab-btn {
-    font-size: 0.72rem;
-  }
+  .app { box-shadow: none; }
+  .app-main { padding-bottom: 4rem; }
+  .tab-btn { font-size: 0.72rem; }
 }
