@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { analyzeCoffeeLabel } from '../api.js'
 import {
   IconCamera, IconUpload, IconArrowRight, IconRefresh,
@@ -82,16 +82,36 @@ function generateBrewGuide({ roastLevel = '', process: proc = '' }) {
   }
 }
 
+// Unique ID: timestamp + random suffix to avoid collisions
+function uid() {
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
+}
+
 function saveToJournal(coffeeData, imageDataUrl) {
   let existing = []
   try { existing = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]') } catch {}
   const entry = {
-    id: Date.now().toString(),
+    id: uid(),
     savedAt: new Date().toISOString(),
     imageDataUrl,
     ...coffeeData,
   }
   localStorage.setItem(STORAGE_KEY, JSON.stringify([entry, ...existing]))
+}
+
+// Persist scanner session so switching tabs doesn't lose state
+const SESSION_KEY = 'brewmap_scanner_session'
+
+function loadSession() {
+  try { return JSON.parse(sessionStorage.getItem(SESSION_KEY) || 'null') } catch { return null }
+}
+
+function persistSession(state) {
+  try { sessionStorage.setItem(SESSION_KEY, JSON.stringify(state)) } catch {}
+}
+
+function clearSession() {
+  try { sessionStorage.removeItem(SESSION_KEY) } catch {}
 }
 
 /* ===== Progress Bar ===== */
@@ -122,14 +142,24 @@ function ProgressBar({ current }) {
 
 /* ===== Main Component ===== */
 export default function LabelScanner({ onBrewSaved }) {
-  const [step, setStep]                   = useState('upload')
-  const [preview, setPreview]             = useState(null)
+  // Restore from sessionStorage so switching tabs doesn't lose progress
+  const saved = loadSession()
+  const [step, setStep]                   = useState(saved?.step ?? 'upload')
+  const [preview, setPreview]             = useState(saved?.preview ?? null)
   const [previewFailed, setPreviewFailed] = useState(false)
   const [pendingFile, setPendingFile]     = useState(null)
-  const [result, setResult]               = useState(null)
+  const [result, setResult]               = useState(saved?.result ?? null)
   const [error, setError]                 = useState(null)
+  const [saving, setSaving]               = useState(false)  // prevent double-save
   const fileInputRef   = useRef(null)
   const cameraInputRef = useRef(null)
+
+  // Persist step + result + preview to sessionStorage whenever they change
+  useEffect(() => {
+    // Don't persist loading state — restore to upload if interrupted
+    const stepToSave = step === 'loading' ? 'upload' : step
+    persistSession({ step: stepToSave, result, preview })
+  }, [step, result, preview])
 
   function handleFileSelect(file) {
     if (!file) return
@@ -162,6 +192,8 @@ export default function LabelScanner({ onBrewSaved }) {
   }
 
   function handleNext() {
+    if (saving) return   // prevent double-tap
+    setSaving(true)
     if (result) {
       try {
         saveToJournal(result, preview)
@@ -171,11 +203,13 @@ export default function LabelScanner({ onBrewSaved }) {
       }
     }
     setStep('recipe')
+    setSaving(false)
   }
 
   function handleReset() {
     setStep('upload'); setPreview(null); setPreviewFailed(false)
-    setPendingFile(null); setResult(null); setError(null)
+    setPendingFile(null); setResult(null); setError(null); setSaving(false)
+    clearSession()
     if (fileInputRef.current)   fileInputRef.current.value = ''
     if (cameraInputRef.current) cameraInputRef.current.value = ''
   }
@@ -191,21 +225,74 @@ export default function LabelScanner({ onBrewSaved }) {
         <>
           {!preview ? (
             <div className="upload-area">
-              <div className="upload-icon">
-                <IconCamera size={32} />
+              <div className="upload-orb-area">
+                {/* 3D holographic orb */}
+                <div className="upload-orb">
+                  <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                      <radialGradient id="orbBase" cx="38%" cy="32%" r="65%">
+                        <stop offset="0%"   stopColor="#FFFFFF" stopOpacity="0.95"/>
+                        <stop offset="30%"  stopColor="#7DD3FC" stopOpacity="0.85"/>
+                        <stop offset="60%"  stopColor="#2563EB" stopOpacity="0.9"/>
+                        <stop offset="85%"  stopColor="#06B6D4" stopOpacity="0.95"/>
+                        <stop offset="100%" stopColor="#0E7490" stopOpacity="1"/>
+                      </radialGradient>
+                      <radialGradient id="orbShine" cx="30%" cy="25%" r="40%">
+                        <stop offset="0%"   stopColor="#FFFFFF" stopOpacity="0.9"/>
+                        <stop offset="60%"  stopColor="#FFFFFF" stopOpacity="0.15"/>
+                        <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0"/>
+                      </radialGradient>
+                      <radialGradient id="orbGloss" cx="65%" cy="70%" r="35%">
+                        <stop offset="0%"   stopColor="#06B6D4" stopOpacity="0.5"/>
+                        <stop offset="100%" stopColor="#06B6D4" stopOpacity="0"/>
+                      </radialGradient>
+                      <filter id="orbBlur">
+                        <feGaussianBlur stdDeviation="1.5"/>
+                      </filter>
+                    </defs>
+                    {/* Glow halo */}
+                    <circle cx="60" cy="60" r="58" fill="rgba(6,182,212,0.12)" filter="url(#orbBlur)"/>
+                    <circle cx="60" cy="60" r="52" fill="rgba(37,99,235,0.1)"  filter="url(#orbBlur)"/>
+                    {/* Main sphere */}
+                    <circle cx="60" cy="60" r="48" fill="url(#orbBase)"/>
+                    {/* Glass shine */}
+                    <circle cx="60" cy="60" r="48" fill="url(#orbShine)"/>
+                    {/* Lower gloss */}
+                    <circle cx="60" cy="60" r="48" fill="url(#orbGloss)"/>
+                    {/* Specular highlight */}
+                    <ellipse cx="44" cy="38" rx="14" ry="9" fill="white" opacity="0.55" transform="rotate(-20 44 38)"/>
+                    <ellipse cx="40" cy="35" rx="6"  ry="3.5" fill="white" opacity="0.8" transform="rotate(-20 40 35)"/>
+                    {/* Rim light */}
+                    <circle cx="60" cy="60" r="48" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" fill="none"/>
+                    {/* Bean silhouette inside orb */}
+                    <g transform="translate(60,60)" opacity="0.2">
+                      <ellipse cx="0" cy="0" rx="12" ry="18" stroke="white" strokeWidth="1.5" fill="none" transform="rotate(-15)"/>
+                      <path d="M0 -16 C-5 -6 -5 6 0 16" stroke="white" strokeWidth="1" fill="none" transform="rotate(-15)"/>
+                    </g>
+                  </svg>
+                </div>
+                <p className="upload-hint">
+                  Point your camera at a coffee bag label or upload a photo.
+                  <br />
+                  <span className="upload-hint-small">AI will extract details and build your brew guide.</span>
+                </p>
               </div>
-              <p className="upload-hint">
-                Point your camera at a coffee bag label or upload a photo.
-                <br />
-                <span className="upload-hint-small">AI will extract details and build your brew guide.</span>
-              </p>
-              <div className="upload-buttons">
-                <button className="btn-primary" onClick={() => cameraInputRef.current?.click()}>
-                  <IconCamera size={16} /> Take Photo
-                </button>
-                <button className="btn-secondary" onClick={() => fileInputRef.current?.click()}>
-                  <IconUpload size={16} /> Upload Image
-                </button>
+              <div className="upload-action-row">
+                <span className="upload-action-label">Choose an option</span>
+                <div className="upload-btn-row">
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.35rem' }}>
+                    <button className="btn-circle primary" onClick={() => cameraInputRef.current?.click()}>
+                      <IconCamera size={22} />
+                    </button>
+                    <span style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase' }}>Camera</span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.35rem' }}>
+                    <button className="btn-circle" onClick={() => fileInputRef.current?.click()}>
+                      <IconUpload size={20} />
+                    </button>
+                    <span style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase' }}>Upload</span>
+                  </div>
+                </div>
               </div>
             </div>
           ) : (
@@ -253,7 +340,7 @@ export default function LabelScanner({ onBrewSaved }) {
 
       {/* STEP 2 — Confirm */}
       {step === 'confirm' && result && (
-        <ConfirmCard data={result} preview={preview} onNext={handleNext} onReset={handleReset} />
+        <ConfirmCard data={result} preview={preview} onNext={handleNext} onReset={handleReset} saving={saving} />
       )}
 
       {/* STEP 3 — Recipe */}
@@ -267,7 +354,7 @@ export default function LabelScanner({ onBrewSaved }) {
 }
 
 /* ===== Step 2: Confirm ===== */
-function ConfirmCard({ data, preview, onNext, onReset }) {
+function ConfirmCard({ data, preview, onNext, onReset, saving }) {
   const { name, origin, region, roastLevel, process, tastingNotes, variety, altitude } = data
 
   const fields = [
@@ -304,7 +391,7 @@ function ConfirmCard({ data, preview, onNext, onReset }) {
       <div className="confirm-footer">
         <p className="confirm-question">Does this look correct?</p>
         <div className="confirm-actions">
-          <button className="btn-primary" onClick={onNext}>
+          <button className="btn-primary" onClick={onNext} disabled={saving}>
             Confirm &amp; see recipe <IconArrowRight size={15} />
           </button>
           <button className="btn-secondary" onClick={onReset}>
