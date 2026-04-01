@@ -182,3 +182,42 @@ export const IconBean = ({ size = 22 }) => (
     <path d="M5.5 5.5c3 2 3 7 0 9" transform="rotate(-20 10 10)"/>
   </svg>
 )
+
+export const IconCalendar = ({ size = 18 }) => (
+  <svg {...S(size)}>
+    <rect x="3" y="4" width="14" height="14" rx="2" />
+    <line x1="3" y1="9" x2="17" y2="9" />
+    <line x1="7" y1="2" x2="7" y2="5" />
+    <line x1="13" y1="2" x2="13" y2="5" />
+  </svg>
+)
+
+export const IconList = ({ size = 18 }) => (
+  <svg {...S(size)}>
+    <line x1="8" y1="6" x2="17" y2="6" />
+    <line x1="8" y1="10" x2="17" y2="10" />
+    <line x1="8" y1="14" x2="17" y2="14" />
+    <circle cx="4.5" cy="6" r="1" fill="currentColor" />
+    <circle cx="4.5" cy="10" r="1" fill="currentColor" />
+    <circle cx="4.5" cy="14" r="1" fill="currentColor" />
+  </svg>
+)
+
+export const IconChevronLeft = ({ size = 14 }) => (
+  <svg {...S(size)}>
+    <polyline points="14 4 6 10 14 16" />
+  </svg>
+)
+
+export const IconChevronRight = ({ size = 14 }) => (
+  <svg {...S(size)}>
+    <polyline points="6 4 14 10 6 16" />
+  </svg>
+)
+
+export const IconSearch = ({ size = 16 }) => (
+  <svg {...S(size)}>
+    <circle cx="9" cy="9" r="5.5" />
+    <line x1="13.5" y1="13.5" x2="17" y2="17" />
+  </svg>
+)

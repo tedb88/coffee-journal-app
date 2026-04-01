@@ -52,31 +52,117 @@ function resizeImageForApi(file) {
   })
 }
 
-function generateBrewGuide({ roastLevel = '', process: proc = '' }) {
-  const r = roastLevel.toLowerCase()
-  const isLight  = r.includes('light')
-  const isDark   = r.includes('dark')
-  const isNatural = /natural|honey|anaerobic/i.test(proc)
+/*
+ * Origin profiles — SCA-aligned defaults for common origins.
+ * Each profile tweaks ratio, temp, grind, bloom, and timing to suit the
+ * typical density, altitude, and flavour profile of that origin.
+ */
+const ORIGIN_PROFILES = {
+  ethiopia:   { ratio: '1:17', temp: 94, grind: 'Medium-Fine',   bloom: 40, total: '3:30', coffee: 15, notes: 'Ethiopian beans are high-altitude and dense — a longer bloom and finer grind unlock floral and fruit complexity.' },
+  kenya:      { ratio: '1:16', temp: 95, grind: 'Medium-Fine',   bloom: 35, total: '3:20', coffee: 15, notes: 'Kenyan AA is bright and juicy. Higher temp brings out the sparkling acidity and blackcurrant notes.' },
+  colombia:   { ratio: '1:16', temp: 93, grind: 'Medium',        bloom: 30, total: '3:10', coffee: 15, notes: 'Colombian coffees are balanced and forgiving — a classic medium extraction works well.' },
+  brazil:     { ratio: '1:15', temp: 91, grind: 'Medium-Coarse', bloom: 35, total: '3:00', coffee: 16, notes: 'Brazilian beans are low-acid and full-bodied. Coarser grind and lower temp emphasise chocolate and nut sweetness.' },
+  guatemala:  { ratio: '1:16', temp: 93, grind: 'Medium',        bloom: 30, total: '3:10', coffee: 15, notes: 'Guatemalan coffees pair well with a balanced extraction — expect cocoa, spice, and mild fruit.' },
+  honduras:   { ratio: '1:16', temp: 92, grind: 'Medium',        bloom: 30, total: '3:05', coffee: 15, notes: 'Honduran beans offer caramel sweetness — a moderate approach lets the sugars shine.' },
+  mexico:     { ratio: '1:16', temp: 92, grind: 'Medium',        bloom: 30, total: '3:05', coffee: 15, notes: 'Mexican coffees tend to be mild and nutty — keep extraction even for a clean, sweet cup.' },
+  costarica:  { ratio: '1:16', temp: 93, grind: 'Medium-Fine',   bloom: 30, total: '3:15', coffee: 15, notes: 'Costa Rican honey-processed lots shine with a slightly finer grind to draw out honey and stone-fruit notes.' },
+  panama:     { ratio: '1:17', temp: 94, grind: 'Medium-Fine',   bloom: 40, total: '3:30', coffee: 14, notes: 'Panamanian Gesha is delicate — use more water and a longer bloom to capture jasmine and bergamot.' },
+  indonesia:  { ratio: '1:14', temp: 90, grind: 'Medium-Coarse', bloom: 35, total: '2:50', coffee: 16, notes: 'Indonesian wet-hulled coffees are earthy and heavy — a shorter, coarser brew prevents muddiness.' },
+  yemen:      { ratio: '1:16', temp: 94, grind: 'Medium-Fine',   bloom: 40, total: '3:25', coffee: 15, notes: 'Yemeni beans are wild and complex — a longer bloom and higher temp coax out dried-fruit and spice layers.' },
+  rwanda:     { ratio: '1:16', temp: 94, grind: 'Medium-Fine',   bloom: 35, total: '3:20', coffee: 15, notes: 'Rwandan lots are bright and tea-like. A finer grind brings out red-fruit and floral sweetness.' },
+}
 
-  const temp  = isLight ? '95°C'          : isDark ? '90°C'          : '93°C'
-  const grind = isLight ? 'Medium-Fine'   : isDark ? 'Medium-Coarse' : 'Medium'
-  const total = isLight ? '3:30'          : isDark ? '2:45'          : '3:10'
+/* Process adjustments — applied on top of origin defaults */
+const PROCESS_ADJUSTMENTS = {
+  natural:  { tempDelta: -1, grindShift: 1, bloomDelta: 5,  ratioShift: -1, tip: 'Natural process adds fruity sweetness — lower temp and coarser grind prevent over-extraction of fermented sugars.' },
+  honey:    { tempDelta: -1, grindShift: 0, bloomDelta: 5,  ratioShift: 0,  tip: 'Honey process retains mucilage sweetness — a slightly lower temp preserves the caramel and stone-fruit character.' },
+  anaerobic:{ tempDelta: -2, grindShift: 1, bloomDelta: 10, ratioShift: -1, tip: 'Anaerobic fermentation intensifies flavour — go coarser and cooler to keep the funky fruit notes in balance.' },
+  washed:   { tempDelta: 0,  grindShift: 0, bloomDelta: 0,  ratioShift: 0,  tip: 'Washed process gives a clean cup — standard parameters let terroir and acidity speak clearly.' },
+  wethulled:{ tempDelta: -1, grindShift: 1, bloomDelta: 0,  ratioShift: 1,  tip: 'Wet-hulled (Giling Basah) coffees are earthy — coarser grind tames the heavy body.' },
+}
 
-  const tips = isNatural
-    ? `${proc} process coffees have natural sweetness — avoid over-extraction to preserve the fruit character.`
-    : isLight
-      ? 'Light roasts reward a longer bloom (up to 45 s) to unlock delicate floral and fruit notes.'
-      : isDark
-        ? 'Dark roasts extract quickly — watch your time closely to avoid bitterness.'
-        : 'Pre-rinse your filter with hot water and use filtered water for the cleanest cup.'
+/* Roast-level adjustments — applied on top of origin + process */
+const ROAST_ADJUSTMENTS = {
+  light:       { tempDelta: 2,  grindShift: -1, timeDelta: 15 },
+  mediumlight: { tempDelta: 1,  grindShift: 0,  timeDelta: 5 },
+  medium:      { tempDelta: 0,  grindShift: 0,  timeDelta: 0 },
+  mediumdark:  { tempDelta: -1, grindShift: 1,  timeDelta: -10 },
+  dark:        { tempDelta: -3, grindShift: 2,  timeDelta: -20 },
+}
+
+const GRIND_SCALE = ['Fine', 'Medium-Fine', 'Medium', 'Medium-Coarse', 'Coarse']
+
+function shiftGrind(base, delta) {
+  const idx = GRIND_SCALE.indexOf(base)
+  if (idx === -1) return base
+  return GRIND_SCALE[Math.max(0, Math.min(GRIND_SCALE.length - 1, idx + delta))]
+}
+
+function parseRatio(r) {
+  const m = r.match(/1:(\d+)/)
+  return m ? parseInt(m[1], 10) : 16
+}
+
+function addSeconds(timeStr, deltaSec) {
+  const [m, s] = timeStr.split(':').map(Number)
+  const totalSec = Math.max(120, m * 60 + s + deltaSec)
+  return `${Math.floor(totalSec / 60)}:${String(totalSec % 60).padStart(2, '0')}`
+}
+
+function generateBrewGuide({ origin = '', roastLevel = '', process: proc = '' }) {
+  // 1. Look up origin profile (fall back to generic Colombia-like defaults)
+  const originKey = origin.toLowerCase().replace(/\s+/g, '')
+  const base = ORIGIN_PROFILES[originKey] || {
+    ratio: '1:16', temp: 93, grind: 'Medium', bloom: 30, total: '3:10', coffee: 15,
+    notes: 'Pre-rinse your filter with hot water and use filtered water for the cleanest cup.',
+  }
+
+  // 2. Apply process adjustment
+  const procKey = proc.toLowerCase().replace(/[\s-]+/g, '')
+  const pa = PROCESS_ADJUSTMENTS[procKey] || PROCESS_ADJUSTMENTS.washed
+
+  let temp  = base.temp + pa.tempDelta
+  let grind = shiftGrind(base.grind, pa.grindShift)
+  let bloom = base.bloom + pa.bloomDelta
+  let ratio = parseRatio(base.ratio) + pa.ratioShift
+  let totalTime = base.total
+  let coffee = base.coffee
+
+  // 3. Apply roast adjustment
+  const roastKey = roastLevel.toLowerCase().replace(/[\s-]+/g, '')
+  const ra = ROAST_ADJUSTMENTS[roastKey] || ROAST_ADJUSTMENTS.medium
+
+  temp  = Math.max(85, Math.min(98, temp + ra.tempDelta))
+  grind = shiftGrind(grind, ra.grindShift)
+  totalTime = addSeconds(totalTime, ra.timeDelta)
+
+  // 4. Compute water amounts from ratio + coffee
+  const totalWater = coffee * ratio
+  const bloomWater = Math.round(coffee * 2)
+  const remaining  = totalWater - bloomWater
+  const firstPour  = Math.round(remaining * 0.5)
+  const finalPour  = totalWater - bloomWater - firstPour
+
+  // 5. Compute step timings
+  const bloomEnd   = `0:${String(bloom).padStart(2, '0')}`
+  const [totalM, totalS] = totalTime.split(':').map(Number)
+  const totalSec   = totalM * 60 + totalS
+  const firstEnd   = `${Math.floor((bloom + (totalSec - bloom) * 0.45) / 60)}:${String(Math.round((bloom + (totalSec - bloom) * 0.45) % 60)).padStart(2, '0')}`
+
+  // 6. Build tips — combine process tip + origin note
+  const tips = pa.tip + ' ' + base.notes
 
   return {
-    coffeeAmount: '15g', waterAmount: '240ml', ratio: '1:16',
-    waterTemp: temp, grindSize: grind, totalTime: total,
+    coffeeAmount: `${coffee}g`,
+    waterAmount:  `${totalWater}ml`,
+    ratio:        `1:${ratio}`,
+    waterTemp:    `${temp}°C`,
+    grindSize:    grind,
+    totalTime,
     steps: [
-      { name: 'Bloom',      water: '30ml',  waitUntil: '0:30', notes: 'Saturate grounds in a slow spiral. Let the bloom fully settle.' },
-      { name: 'First Pour', water: '105ml', waitUntil: '1:30', notes: 'Steady circular pour from centre outward. Keep grounds submerged.' },
-      { name: 'Final Pour', water: '105ml', waitUntil: total,  notes: 'Even finish pour. Aim for a flat bed as the coffee drains.' },
+      { name: 'Bloom',      water: `${bloomWater}ml`, waitUntil: bloomEnd,  notes: `Saturate grounds in a slow spiral. Let CO₂ release for ${bloom} seconds.` },
+      { name: 'First Pour', water: `${firstPour}ml`,  waitUntil: firstEnd,  notes: 'Steady circular pour from centre outward. Keep the slurry level even.' },
+      { name: 'Final Pour', water: `${finalPour}ml`,  waitUntil: totalTime, notes: 'Gentle finish pour. Aim for a flat, even bed as the last drops drain through.' },
     ],
     tips,
   }
@@ -96,7 +182,20 @@ function saveToJournal(coffeeData, imageDataUrl) {
     imageDataUrl,
     ...coffeeData,
   }
-  localStorage.setItem(STORAGE_KEY, JSON.stringify([entry, ...existing]))
+  const data = [entry, ...existing]
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
+  } catch {
+    // Quota exceeded — retry without images to ensure recipe data is saved
+    const slim = data.map(({ imageDataUrl: _img, ...rest }) => rest)
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(slim))
+    } catch {
+      // Still failing — drop oldest entries until it fits
+      const trimmed = slim.slice(0, Math.max(1, slim.length - 5))
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(trimmed))
+    }
+  }
 }
 
 // Persist scanner session so switching tabs doesn't lose state
