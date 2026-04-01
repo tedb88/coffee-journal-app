@@ -9,46 +9,88 @@ import {
 import './LabelScanner.css'
 
 const STORAGE_KEY = 'brewmap_journal'
-const MAX_DIM = 512
+const MAX_DIM_API     = 512   // max dimension for API payload
+const MAX_DIM_PREVIEW = 800   // max dimension for preview thumbnail
+const MAX_FILE_MB     = 20    // reject files over this size
 
 function isImageFile(file) {
   if (file.type.startsWith('image/')) return true
   return /\.(jpe?g|png|gif|webp|heic|heif|avif|tiff?|bmp)$/i.test(file.name)
 }
 
-function resizeImageForApi(file) {
+function isHeicFile(file) {
+  return /heic|heif/i.test(file.type) || /\.(heic|heif)$/i.test(file.name)
+}
+
+// Resize via canvas → JPEG blob. Works for any format the browser can decode.
+function resizeViaCanvas(img, maxDim, quality) {
+  const scale = Math.min(1, maxDim / Math.max(img.width, img.height))
+  const w = Math.round(img.width * scale)
+  const h = Math.round(img.height * scale)
+  const canvas = document.createElement('canvas')
+  canvas.width = w; canvas.height = h
+  canvas.getContext('2d').drawImage(img, 0, 0, w, h)
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(blob => {
+      if (!blob) reject(new Error('Could not process image. Please try a JPEG or PNG.'))
+      else resolve(blob)
+    }, 'image/jpeg', quality)
+  })
+}
+
+// Load an image from a File or Blob, with timeout for slow devices
+function loadImage(src, timeoutMs = 15000) {
   return new Promise((resolve, reject) => {
     const img = new Image()
+    const timer = setTimeout(() => {
+      img.src = ''
+      reject(new Error('Image took too long to load. Try a smaller photo.'))
+    }, timeoutMs)
+    img.onload  = () => { clearTimeout(timer); resolve(img) }
+    img.onerror = () => { clearTimeout(timer); reject(null) } // caller handles message
+    img.src = src
+  })
+}
+
+// Generate a compressed preview thumbnail (keeps memory low on mobile)
+function createPreviewUrl(file) {
+  return new Promise(async (resolve) => {
     const url = URL.createObjectURL(file)
-
-    img.onload = () => {
+    try {
+      const img = await loadImage(url)
       URL.revokeObjectURL(url)
-      const scale = Math.min(1, MAX_DIM / Math.max(img.width, img.height))
-      const w = Math.round(img.width * scale)
-      const h = Math.round(img.height * scale)
-      const canvas = document.createElement('canvas')
-      canvas.width = w; canvas.height = h
-      canvas.getContext('2d').drawImage(img, 0, 0, w, h)
-      canvas.toBlob(blob => {
-        if (!blob) { reject(new Error('Could not process image. Please try a JPEG or PNG.')); return }
-        const reader = new FileReader()
-        reader.onload = e => resolve({ base64: e.target.result.split(',')[1], mimeType: 'image/jpeg' })
-        reader.onerror = () => reject(new Error('Failed to read image file.'))
-        reader.readAsDataURL(blob)
-      }, 'image/jpeg', 0.72)
+      const blob = await resizeViaCanvas(img, MAX_DIM_PREVIEW, 0.7)
+      const reader = new FileReader()
+      reader.onload = e => resolve(e.target.result)
+      reader.onerror = () => resolve(url) // fallback to raw
+      reader.readAsDataURL(blob)
+    } catch {
+      // Can't decode (HEIC on non-Safari) — use object URL as-is, preview may fail
+      resolve(url)
     }
+  })
+}
 
-    img.onerror = () => {
+// Compress for API: small JPEG base64
+function resizeImageForApi(file) {
+  return new Promise(async (resolve, reject) => {
+    const url = URL.createObjectURL(file)
+    try {
+      const img = await loadImage(url)
       URL.revokeObjectURL(url)
-      const isHeic = /heic|heif/i.test(file.type) || /\.(heic|heif)$/i.test(file.name)
-      if (isHeic) {
-        reject(new Error('HEIC photos aren\'t supported by this browser. On iPhone, go to Settings → Camera → Formats → Most Compatible to save as JPEG.'))
+      const blob = await resizeViaCanvas(img, MAX_DIM_API, 0.72)
+      const reader = new FileReader()
+      reader.onload = e => resolve({ base64: e.target.result.split(',')[1], mimeType: 'image/jpeg' })
+      reader.onerror = () => reject(new Error('Failed to read image file.'))
+      reader.readAsDataURL(blob)
+    } catch {
+      URL.revokeObjectURL(url)
+      if (isHeicFile(file)) {
+        reject(new Error('HEIC photos aren\'t supported by this browser. On iPhone, go to Settings → Camera → Formats → Most Compatible, or share the photo to yourself first.'))
       } else {
         reject(new Error('Could not decode this image. Please try a JPEG or PNG file.'))
       }
     }
-
-    img.src = url
   })
 }
 
@@ -260,18 +302,23 @@ export default function LabelScanner({ onBrewSaved }) {
     persistSession({ step: stepToSave, result, preview })
   }, [step, result, preview])
 
-  function handleFileSelect(file) {
+  async function handleFileSelect(file) {
     if (!file) return
     if (!isImageFile(file)) {
       setError('Please upload an image file (JPEG, PNG, WEBP, HEIC, etc.)')
       return
     }
+    const sizeMB = file.size / (1024 * 1024)
+    if (sizeMB > MAX_FILE_MB) {
+      setError(`Photo is too large (${sizeMB.toFixed(1)} MB). Please use a photo under ${MAX_FILE_MB} MB.`)
+      return
+    }
     setError(null)
     setPreviewFailed(false)
     setPendingFile(file)
-    const reader = new FileReader()
-    reader.onload = e => setPreview(e.target.result)
-    reader.readAsDataURL(file)
+    // Generate a compressed preview instead of reading the full-size file
+    const thumbUrl = await createPreviewUrl(file)
+    setPreview(thumbUrl)
   }
 
   async function handleGo() {
