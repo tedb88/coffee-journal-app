@@ -151,7 +151,12 @@ function addSeconds(timeStr, deltaSec) {
   return `${Math.floor(totalSec / 60)}:${String(totalSec % 60).padStart(2, '0')}`
 }
 
-function generateBrewGuide({ origin = '', roastLevel = '', process: proc = '' }) {
+function getDefaultDose({ origin = '' }) {
+  const originKey = origin.toLowerCase().replace(/\s+/g, '')
+  return (ORIGIN_PROFILES[originKey] || { coffee: 15 }).coffee
+}
+
+function generateBrewGuide({ origin = '', roastLevel = '', process: proc = '' }, customDose) {
   // 1. Look up origin profile (fall back to generic Colombia-like defaults)
   const originKey = origin.toLowerCase().replace(/\s+/g, '')
   const base = ORIGIN_PROFILES[originKey] || {
@@ -168,7 +173,9 @@ function generateBrewGuide({ origin = '', roastLevel = '', process: proc = '' })
   let bloom = base.bloom + pa.bloomDelta
   let ratio = parseRatio(base.ratio) + pa.ratioShift
   let totalTime = base.total
-  let coffee = base.coffee
+
+  // Use custom dose if provided, otherwise origin default
+  const coffee = customDose || base.coffee
 
   // 3. Apply roast adjustment
   const roastKey = roastLevel.toLowerCase().replace(/[\s-]+/g, '')
@@ -178,20 +185,30 @@ function generateBrewGuide({ origin = '', roastLevel = '', process: proc = '' })
   grind = shiftGrind(grind, ra.grindShift)
   totalTime = addSeconds(totalTime, ra.timeDelta)
 
-  // 4. Compute water amounts from ratio + coffee
-  const totalWater = coffee * ratio
+  // 4. Scale brew time proportionally when dose differs from default
+  const doseRatio = coffee / base.coffee
+  if (doseRatio !== 1) {
+    // Larger dose = slightly longer brew; scale gently (sqrt curve)
+    const timeScale = Math.sqrt(doseRatio)
+    const [tM, tS] = totalTime.split(':').map(Number)
+    const scaled = Math.round((tM * 60 + tS) * timeScale)
+    totalTime = `${Math.floor(scaled / 60)}:${String(scaled % 60).padStart(2, '0')}`
+  }
+
+  // 5. Compute water amounts from ratio + coffee
+  const totalWater = Math.round(coffee * ratio)
   const bloomWater = Math.round(coffee * 2)
   const remaining  = totalWater - bloomWater
   const firstPour  = Math.round(remaining * 0.5)
   const finalPour  = totalWater - bloomWater - firstPour
 
-  // 5. Compute step timings
+  // 6. Compute step timings
   const bloomEnd   = `0:${String(bloom).padStart(2, '0')}`
   const [totalM, totalS] = totalTime.split(':').map(Number)
   const totalSec   = totalM * 60 + totalS
   const firstEnd   = `${Math.floor((bloom + (totalSec - bloom) * 0.45) / 60)}:${String(Math.round((bloom + (totalSec - bloom) * 0.45) % 60)).padStart(2, '0')}`
 
-  // 6. Build tips — combine process tip + origin note
+  // 7. Build tips — combine process tip + origin note
   const tips = pa.tip + ' ' + base.notes
 
   return {
@@ -290,17 +307,18 @@ export default function LabelScanner({ onBrewSaved }) {
   const [previewFailed, setPreviewFailed] = useState(false)
   const [pendingFile, setPendingFile]     = useState(null)
   const [result, setResult]               = useState(saved?.result ?? null)
+  const [coffeeDose, setCoffeeDose]       = useState(saved?.coffeeDose ?? 15)
   const [error, setError]                 = useState(null)
   const [saving, setSaving]               = useState(false)  // prevent double-save
   const fileInputRef   = useRef(null)
   const cameraInputRef = useRef(null)
 
-  // Persist step + result + preview to sessionStorage whenever they change
+  // Persist step + result + preview + dose to sessionStorage whenever they change
   useEffect(() => {
     // Don't persist loading state — restore to upload if interrupted
     const stepToSave = step === 'loading' ? 'upload' : step
-    persistSession({ step: stepToSave, result, preview })
-  }, [step, result, preview])
+    persistSession({ step: stepToSave, result, preview, coffeeDose })
+  }, [step, result, preview, coffeeDose])
 
   async function handleFileSelect(file) {
     if (!file) return
@@ -328,8 +346,9 @@ export default function LabelScanner({ onBrewSaved }) {
     try {
       const { base64, mimeType } = await resizeImageForApi(pendingFile)
       const labelData  = await analyzeCoffeeLabel(base64, mimeType)
-      const coffeeData = { ...labelData, brewGuide: generateBrewGuide(labelData) }
-      setResult(coffeeData)
+      // Store label data without brew guide — guide is generated after user picks dose
+      setResult(labelData)
+      setCoffeeDose(getDefaultDose(labelData))
       setStep('confirm')
     } catch (e) {
       setError(e.message)
@@ -341,12 +360,16 @@ export default function LabelScanner({ onBrewSaved }) {
     if (saving) return   // prevent double-tap
     setSaving(true)
     if (result) {
+      // Generate brew guide with user's chosen dose
+      const brewGuide = generateBrewGuide(result, coffeeDose)
+      const coffeeData = { ...result, brewGuide }
       try {
-        saveToJournal(result, preview)
+        saveToJournal(coffeeData, preview)
         onBrewSaved()
       } catch (e) {
         console.warn('Could not save to journal:', e.message)
       }
+      setResult(coffeeData)
     }
     setStep('recipe')
     setSaving(false)
@@ -354,7 +377,7 @@ export default function LabelScanner({ onBrewSaved }) {
 
   function handleReset() {
     setStep('upload'); setPreview(null); setPreviewFailed(false)
-    setPendingFile(null); setResult(null); setError(null); setSaving(false)
+    setPendingFile(null); setResult(null); setError(null); setSaving(false); setCoffeeDose(15)
     clearSession()
     if (fileInputRef.current)   fileInputRef.current.value = ''
     if (cameraInputRef.current) cameraInputRef.current.value = ''
@@ -482,9 +505,10 @@ export default function LabelScanner({ onBrewSaved }) {
 
       {error && <div className="error-box">{error}</div>}
 
-      {/* STEP 2 — Confirm */}
+      {/* STEP 2 — Confirm + dose picker */}
       {step === 'confirm' && result && (
-        <ConfirmCard data={result} preview={preview} onNext={handleNext} onReset={handleReset} saving={saving} />
+        <ConfirmCard data={result} preview={preview} onNext={handleNext} onReset={handleReset} saving={saving}
+          coffeeDose={coffeeDose} setCoffeeDose={setCoffeeDose} />
       )}
 
       {/* STEP 3 — Recipe */}
@@ -497,8 +521,16 @@ export default function LabelScanner({ onBrewSaved }) {
   )
 }
 
+/* ===== Dose Presets ===== */
+const DOSE_PRESETS = [
+  { label: '1 cup',   grams: 15 },
+  { label: '2 cups',  grams: 25 },
+  { label: 'Strong',  grams: 18 },
+  { label: 'Light',   grams: 12 },
+]
+
 /* ===== Step 2: Confirm ===== */
-function ConfirmCard({ data, preview, onNext, onReset, saving }) {
+function ConfirmCard({ data, preview, onNext, onReset, saving, coffeeDose, setCoffeeDose }) {
   const { name, origin, region, roastLevel, process, tastingNotes, variety, altitude } = data
 
   const fields = [
@@ -509,6 +541,18 @@ function ConfirmCard({ data, preview, onNext, onReset, saving }) {
     altitude    && { Icon: IconMountain, label: 'Altitude',      value: altitude },
     tastingNotes?.length > 0 && { Icon: IconSparkle, label: 'Tasting Notes', value: tastingNotes.join(' · ') },
   ].filter(Boolean)
+
+  function handleDoseChange(e) {
+    const v = parseInt(e.target.value, 10)
+    if (!isNaN(v) && v >= 1 && v <= 50) setCoffeeDose(v)
+  }
+
+  // Compute a live water preview so user sees the effect of their dose choice
+  const originKey = (origin || '').toLowerCase().replace(/\s+/g, '')
+  const procKey = (process || '').toLowerCase().replace(/[\s-]+/g, '')
+  const baseRatio = parseRatio((ORIGIN_PROFILES[originKey] || { ratio: '1:16' }).ratio)
+  const ratioShift = (PROCESS_ADJUSTMENTS[procKey] || PROCESS_ADJUSTMENTS.washed).ratioShift
+  const liveWater = Math.round(coffeeDose * (baseRatio + ratioShift))
 
   return (
     <article className="confirm-card card" style={{ animation: 'fadeUp 0.22s ease both' }}>
@@ -532,11 +576,60 @@ function ConfirmCard({ data, preview, onNext, onReset, saving }) {
         ))}
       </ul>
 
+      {/* Dose picker */}
+      <div className="dose-picker">
+        <div className="dose-picker-label">
+          <IconScale size={14} />
+          <span>How much coffee?</span>
+        </div>
+
+        <div className="dose-presets">
+          {DOSE_PRESETS.map(p => (
+            <button
+              key={p.label}
+              className={`dose-preset-btn${coffeeDose === p.grams ? ' active' : ''}`}
+              onClick={() => setCoffeeDose(p.grams)}
+            >
+              {p.label}
+              <span className="dose-preset-g">{p.grams}g</span>
+            </button>
+          ))}
+        </div>
+
+        <div className="dose-custom-row">
+          <div className="dose-slider-wrap">
+            <input
+              type="range"
+              min="8"
+              max="40"
+              step="1"
+              value={coffeeDose}
+              onChange={handleDoseChange}
+              className="dose-slider"
+            />
+          </div>
+          <div className="dose-display">
+            <input
+              type="number"
+              min="1"
+              max="50"
+              value={coffeeDose}
+              onChange={handleDoseChange}
+              className="dose-input"
+            />
+            <span className="dose-unit">g</span>
+          </div>
+        </div>
+
+        <p className="dose-water-preview">
+          <IconDroplet size={12} /> {liveWater}ml water (1:{baseRatio + ratioShift} ratio)
+        </p>
+      </div>
+
       <div className="confirm-footer">
-        <p className="confirm-question">Does this look correct?</p>
         <div className="confirm-actions">
           <button className="btn-primary" onClick={onNext} disabled={saving}>
-            Confirm &amp; see recipe <IconArrowRight size={15} />
+            Generate recipe <IconArrowRight size={15} />
           </button>
           <button className="btn-secondary" onClick={onReset}>
             <IconRefresh size={14} /> Start over
