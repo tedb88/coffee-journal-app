@@ -9,8 +9,8 @@
   max-width: 480px;
   margin: 0 auto;
   box-shadow:
-    0 0 0 1px rgba(37,99,235,0.08),
-    0 8px 60px rgba(37,99,235,0.10),
+    0 0 0 1px rgba(220,38,38,0.08),
+    0 8px 60px rgba(220,38,38,0.10),
     inset 0 1px 0 rgba(255,255,255,0.9);
   position: relative;
 }
@@ -27,7 +27,7 @@
 .header-banner {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(160deg, rgba(240,247,255,0.95) 0%, rgba(255,255,255,0.9) 50%, rgba(236,254,255,0.95) 100%);
+  background: linear-gradient(160deg, rgba(255,247,240,0.95) 0%, rgba(255,255,255,0.9) 50%, rgba(255,244,237,0.95) 100%);
   backdrop-filter: blur(12px);
 }
 
@@ -58,7 +58,7 @@
   justify-content: center;
   color: white;
   flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(37,99,235,0.35);
+  box-shadow: 0 4px 12px rgba(220,38,38,0.35);
 }
 
 .header-title {
@@ -114,14 +114,14 @@
 .tab-btn:hover:not(.active) {
   border-color: var(--cyan);
   color: var(--cyan);
-  background: rgba(6,182,212,0.06);
+  background: rgba(249,115,22,0.06);
 }
 
 .tab-btn.active {
   background: var(--gradient);
   color: white;
   border-color: transparent;
-  box-shadow: 0 4px 16px rgba(37,99,235,0.3);
+  box-shadow: 0 4px 16px rgba(220,38,38,0.3);
 }
 
 .tab-btn .tab-icon { display: flex; align-items: center; }
@@ -177,14 +177,14 @@
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
-  box-shadow: 0 4px 20px rgba(37,99,235,0.35);
+  box-shadow: 0 4px 20px rgba(220,38,38,0.35);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   min-height: 50px;
   border: none;
   letter-spacing: 0.01em;
 }
 
-.btn-primary:hover  { transform: translateY(-1px) scale(1.02); box-shadow: 0 8px 28px rgba(37,99,235,0.45); }
+.btn-primary:hover  { transform: translateY(-1px) scale(1.02); box-shadow: 0 8px 28px rgba(220,38,38,0.45); }
 .btn-primary:active { transform: scale(0.98); }
 .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
 
@@ -237,7 +237,7 @@
 .spinner {
   width: 40px;
   height: 40px;
-  border: 2.5px solid rgba(37,99,235,0.12);
+  border: 2.5px solid rgba(220,38,38,0.12);
   border-top-color: var(--blue);
   border-right-color: var(--cyan);
   border-radius: 50%;

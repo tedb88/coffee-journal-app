@@ -226,48 +226,46 @@ export default function LabelScanner({ onBrewSaved }) {
           {!preview ? (
             <div className="upload-area">
               <div className="upload-orb-area">
-                {/* 3D holographic orb */}
+                {/* 3D holographic coffee bean */}
                 <div className="upload-orb">
                   <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <defs>
-                      <radialGradient id="orbBase" cx="38%" cy="32%" r="65%">
+                      <radialGradient id="beanBase" cx="35%" cy="30%" r="70%">
                         <stop offset="0%"   stopColor="#FFFFFF" stopOpacity="0.95"/>
-                        <stop offset="30%"  stopColor="#7DD3FC" stopOpacity="0.85"/>
-                        <stop offset="60%"  stopColor="#2563EB" stopOpacity="0.9"/>
-                        <stop offset="85%"  stopColor="#06B6D4" stopOpacity="0.95"/>
-                        <stop offset="100%" stopColor="#0E7490" stopOpacity="1"/>
+                        <stop offset="25%"  stopColor="#FCA5A5" stopOpacity="0.9"/>
+                        <stop offset="55%"  stopColor="#DC2626" stopOpacity="0.92"/>
+                        <stop offset="82%"  stopColor="#F97316" stopOpacity="0.96"/>
+                        <stop offset="100%" stopColor="#9A3412" stopOpacity="1"/>
                       </radialGradient>
-                      <radialGradient id="orbShine" cx="30%" cy="25%" r="40%">
-                        <stop offset="0%"   stopColor="#FFFFFF" stopOpacity="0.9"/>
-                        <stop offset="60%"  stopColor="#FFFFFF" stopOpacity="0.15"/>
+                      <radialGradient id="beanShine" cx="28%" cy="22%" r="42%">
+                        <stop offset="0%"   stopColor="#FFFFFF" stopOpacity="0.92"/>
+                        <stop offset="55%"  stopColor="#FFFFFF" stopOpacity="0.18"/>
                         <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0"/>
                       </radialGradient>
-                      <radialGradient id="orbGloss" cx="65%" cy="70%" r="35%">
-                        <stop offset="0%"   stopColor="#06B6D4" stopOpacity="0.5"/>
-                        <stop offset="100%" stopColor="#06B6D4" stopOpacity="0"/>
+                      <radialGradient id="beanGloss" cx="68%" cy="72%" r="38%">
+                        <stop offset="0%"   stopColor="#F97316" stopOpacity="0.55"/>
+                        <stop offset="100%" stopColor="#F97316" stopOpacity="0"/>
                       </radialGradient>
-                      <filter id="orbBlur">
-                        <feGaussianBlur stdDeviation="1.5"/>
+                      <filter id="beanBlur">
+                        <feGaussianBlur stdDeviation="2"/>
                       </filter>
                     </defs>
-                    {/* Glow halo */}
-                    <circle cx="60" cy="60" r="58" fill="rgba(6,182,212,0.12)" filter="url(#orbBlur)"/>
-                    <circle cx="60" cy="60" r="52" fill="rgba(37,99,235,0.1)"  filter="url(#orbBlur)"/>
-                    {/* Main sphere */}
-                    <circle cx="60" cy="60" r="48" fill="url(#orbBase)"/>
-                    {/* Glass shine */}
-                    <circle cx="60" cy="60" r="48" fill="url(#orbShine)"/>
-                    {/* Lower gloss */}
-                    <circle cx="60" cy="60" r="48" fill="url(#orbGloss)"/>
-                    {/* Specular highlight */}
-                    <ellipse cx="44" cy="38" rx="14" ry="9" fill="white" opacity="0.55" transform="rotate(-20 44 38)"/>
-                    <ellipse cx="40" cy="35" rx="6"  ry="3.5" fill="white" opacity="0.8" transform="rotate(-20 40 35)"/>
-                    {/* Rim light */}
-                    <circle cx="60" cy="60" r="48" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" fill="none"/>
-                    {/* Bean silhouette inside orb */}
-                    <g transform="translate(60,60)" opacity="0.2">
-                      <ellipse cx="0" cy="0" rx="12" ry="18" stroke="white" strokeWidth="1.5" fill="none" transform="rotate(-15)"/>
-                      <path d="M0 -16 C-5 -6 -5 6 0 16" stroke="white" strokeWidth="1" fill="none" transform="rotate(-15)"/>
+                    {/* Outer glow halo */}
+                    <ellipse cx="60" cy="60" rx="44" ry="54" fill="rgba(249,115,22,0.14)" filter="url(#beanBlur)" transform="rotate(-18 60 60)"/>
+                    <ellipse cx="60" cy="60" rx="36" ry="46" fill="rgba(220,38,38,0.10)" filter="url(#beanBlur)" transform="rotate(-18 60 60)"/>
+                    {/* Main bean body — rotated ellipse */}
+                    <g transform="rotate(-18 60 60)">
+                      <ellipse cx="60" cy="60" rx="26" ry="42" fill="url(#beanBase)"/>
+                      <ellipse cx="60" cy="60" rx="26" ry="42" fill="url(#beanShine)"/>
+                      <ellipse cx="60" cy="60" rx="26" ry="42" fill="url(#beanGloss)"/>
+                      {/* Centre crease — the defining coffee bean line */}
+                      <path d="M60 19 C52 35, 68 58, 60 78 C55 90, 60 101, 60 101"
+                        stroke="rgba(120,15,15,0.45)" strokeWidth="2" fill="none" strokeLinecap="round"/>
+                      {/* Specular highlight top-left */}
+                      <ellipse cx="48" cy="38" rx="11" ry="6" fill="white" opacity="0.58" transform="rotate(-22 48 38)"/>
+                      <ellipse cx="45" cy="34" rx="5" ry="2.8" fill="white" opacity="0.82" transform="rotate(-22 45 34)"/>
+                      {/* Rim */}
+                      <ellipse cx="60" cy="60" rx="26" ry="42" stroke="rgba(255,255,255,0.28)" strokeWidth="1.5" fill="none"/>
                     </g>
                   </svg>
                 </div>

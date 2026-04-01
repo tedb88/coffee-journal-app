@@ -5,7 +5,7 @@
   padding: 0;
   overflow: hidden;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(37,99,235,0.1);
+  border: 1px solid rgba(220,38,38,0.1);
   box-shadow: var(--shadow-md);
 }
 
@@ -19,14 +19,14 @@
   background: var(--gradient);
   border: 2px solid white;
   border-radius: 50%;
-  box-shadow: 0 2px 8px rgba(37,99,235,0.45);
+  box-shadow: 0 2px 8px rgba(220,38,38,0.45);
   transition: transform 0.15s ease, box-shadow 0.15s ease;
   cursor: pointer;
 }
 
 .map-pin:hover {
   transform: scale(1.5);
-  box-shadow: 0 4px 14px rgba(6,182,212,0.55);
+  box-shadow: 0 4px 14px rgba(249,115,22,0.55);
 }
 
 /* ===== Popup ===== */
@@ -50,14 +50,14 @@
 
 .map-popup-chip {
   display: inline-block;
-  background: #EFF6FF;
+  background: #FEF3EE;
   color: var(--blue);
   border-radius: var(--radius-full);
   padding: 0.1rem 0.4rem;
   font-size: 0.66rem;
   font-weight: 600;
   margin-top: 0.1rem;
-  border: 1px solid #BFDBFE;
+  border: 1px solid #FED7AA;
 }
 
 .map-popup-notes { font-style: italic; color: var(--text-secondary); font-size: 0.74rem; margin-top: 0.1rem; }
