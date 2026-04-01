@@ -60,8 +60,6 @@ VITE_GROQ_API_KEY=your_groq_api_key_here
 npm run dev
 ```
 
-Open [http://localhost:5173](http://localhost:5173) in your browser.
-
 ---
 
 ## 🛠️ Tech Stack
