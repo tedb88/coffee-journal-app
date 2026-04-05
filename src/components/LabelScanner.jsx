@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { analyzeCoffeeLabel } from '../api.js'
+import { analyzeCoffeeLabel, generateBrewRecipe } from '../api.js'
 import {
   IconCamera, IconUpload, IconArrowRight, IconRefresh,
   IconGlobe, IconFlame, IconGear, IconLeaf, IconMountain, IconSparkle,
@@ -273,7 +273,7 @@ function clearSession() {
 }
 
 /* ===== Progress Bar ===== */
-const STEP_LABELS = ['Scan', 'Confirm', 'Brew']
+const STEP_LABELS = ['Scan', 'Confirm', 'Flavour', 'Brew']
 
 function ProgressBar({ current }) {
   return (
@@ -310,15 +310,17 @@ export default function LabelScanner({ onBrewSaved }) {
   const [coffeeDose, setCoffeeDose]       = useState(saved?.coffeeDose ?? 15)
   const [error, setError]                 = useState(null)
   const [saving, setSaving]               = useState(false)  // prevent double-save
+  const [recipeLoading, setRecipeLoading] = useState(false)  // AI recipe generation in progress
+  const [flavorProfile, setFlavorProfile] = useState(saved?.flavorProfile ?? { taste: null, body: null, acidity: null })
   const fileInputRef   = useRef(null)
   const cameraInputRef = useRef(null)
 
-  // Persist step + result + preview + dose to sessionStorage whenever they change
+  // Persist step + result + preview + dose + flavor to sessionStorage whenever they change
   useEffect(() => {
-    // Don't persist loading state — restore to upload if interrupted
-    const stepToSave = step === 'loading' ? 'upload' : step
-    persistSession({ step: stepToSave, result, preview, coffeeDose })
-  }, [step, result, preview, coffeeDose])
+    // Don't persist loading states — restore to safe prior step if interrupted
+    const stepToSave = step === 'loading' ? 'upload' : step === 'flavor' ? 'confirm' : step
+    persistSession({ step: stepToSave, result, preview, coffeeDose, flavorProfile })
+  }, [step, result, preview, coffeeDose, flavorProfile])
 
   async function handleFileSelect(file) {
     if (!file) return
@@ -357,20 +359,33 @@ export default function LabelScanner({ onBrewSaved }) {
   }
 
   function handleNext() {
-    if (saving) return   // prevent double-tap
+    if (!result) return
+    setStep('flavor')
+  }
+
+  async function handleGenerate() {
+    if (saving) return
     setSaving(true)
-    if (result) {
-      // Generate brew guide with user's chosen dose
-      const brewGuide = generateBrewGuide(result, coffeeDose)
-      const coffeeData = { ...result, brewGuide }
-      try {
-        saveToJournal(coffeeData, preview)
-        onBrewSaved()
-      } catch (e) {
-        console.warn('Could not save to journal:', e.message)
-      }
-      setResult(coffeeData)
+    setRecipeLoading(true)
+
+    let brewGuide
+    try {
+      brewGuide = await generateBrewRecipe(result, coffeeDose, flavorProfile)
+    } catch (e) {
+      console.warn('AI recipe failed, falling back to algorithmic guide:', e.message)
+      brewGuide = generateBrewGuide(result, coffeeDose)
     }
+
+    setRecipeLoading(false)
+
+    const coffeeData = { ...result, brewGuide }
+    try {
+      saveToJournal(coffeeData, preview)
+      onBrewSaved()
+    } catch (e) {
+      console.warn('Could not save to journal:', e.message)
+    }
+    setResult(coffeeData)
     setStep('recipe')
     setSaving(false)
   }
@@ -378,12 +393,13 @@ export default function LabelScanner({ onBrewSaved }) {
   function handleReset() {
     setStep('upload'); setPreview(null); setPreviewFailed(false)
     setPendingFile(null); setResult(null); setError(null); setSaving(false); setCoffeeDose(15)
+    setFlavorProfile({ taste: null, body: null, acidity: null })
     clearSession()
     if (fileInputRef.current)   fileInputRef.current.value = ''
     if (cameraInputRef.current) cameraInputRef.current.value = ''
   }
 
-  const progressStep = step === 'recipe' ? 3 : step === 'confirm' ? 2 : 1
+  const progressStep = step === 'recipe' ? 4 : step === 'flavor' ? 3 : step === 'confirm' ? 2 : 1
 
   return (
     <section className="scanner-section">
@@ -492,7 +508,7 @@ export default function LabelScanner({ onBrewSaved }) {
         </>
       )}
 
-      {/* LOADING */}
+      {/* LOADING — OCR analysis */}
       {step === 'loading' && (
         <div className="spinner-wrap card">
           <div className="spinner" />
@@ -503,15 +519,37 @@ export default function LabelScanner({ onBrewSaved }) {
         </div>
       )}
 
+      {/* LOADING — AI recipe generation */}
+      {recipeLoading && (
+        <div className="spinner-wrap card">
+          <div className="spinner" />
+          <p className="spinner-label">
+            Crafting your recipe…<br />
+            <span style={{ fontSize: '0.8rem' }}>AI is dialling in the parameters</span>
+          </p>
+        </div>
+      )}
+
       {error && <div className="error-box">{error}</div>}
 
       {/* STEP 2 — Confirm + dose picker */}
-      {step === 'confirm' && result && (
+      {step === 'confirm' && result && !recipeLoading && (
         <ConfirmCard data={result} preview={preview} onNext={handleNext} onReset={handleReset} saving={saving}
           coffeeDose={coffeeDose} setCoffeeDose={setCoffeeDose} />
       )}
 
-      {/* STEP 3 — Recipe */}
+      {/* STEP 3 — Flavor profile */}
+      {step === 'flavor' && !recipeLoading && (
+        <FlavorCard
+          flavorProfile={flavorProfile}
+          setFlavorProfile={setFlavorProfile}
+          onGenerate={handleGenerate}
+          onBack={() => setStep('confirm')}
+          saving={saving}
+        />
+      )}
+
+      {/* STEP 4 — Recipe */}
       {step === 'recipe' && result && (
         <RecipeCard data={result} preview={preview} onReset={handleReset} />
       )}
@@ -629,7 +667,7 @@ function ConfirmCard({ data, preview, onNext, onReset, saving, coffeeDose, setCo
       <div className="confirm-footer">
         <div className="confirm-actions">
           <button className="btn-primary" onClick={onNext} disabled={saving}>
-            Generate recipe <IconArrowRight size={15} />
+            Choose flavour <IconArrowRight size={15} />
           </button>
           <button className="btn-secondary" onClick={onReset}>
             <IconRefresh size={14} /> Start over
@@ -640,7 +678,84 @@ function ConfirmCard({ data, preview, onNext, onReset, saving, coffeeDose, setCo
   )
 }
 
-/* ===== Step 3: Recipe ===== */
+/* ===== Step 3: Flavor Profile ===== */
+const FLAVOR_SECTIONS = [
+  {
+    key: 'taste',
+    label: 'Taste profile',
+    options: [
+      { value: 'fruity',     label: 'Fruity',          hint: '4–6 pours' },
+      { value: 'floral',     label: 'Floral',          hint: '4–6 pours' },
+      { value: 'chocolatey', label: 'Chocolatey/Nutty', hint: '3–4 pours' },
+      { value: 'balanced',   label: 'Balanced',        hint: '3–4 pours' },
+    ],
+  },
+  {
+    key: 'body',
+    label: 'Body & strength',
+    options: [
+      { value: 'light',        label: 'Light & delicate' },
+      { value: 'medium',       label: 'Medium body' },
+      { value: 'strong',       label: 'Full & strong' },
+      { value: 'concentrated', label: 'Concentrated' },
+    ],
+  },
+  {
+    key: 'acidity',
+    label: 'Acidity',
+    options: [
+      { value: 'bright',   label: 'Bright & sparkling' },
+      { value: 'smooth',   label: 'Mild & smooth' },
+      { value: 'lowacid',  label: 'Low acid' },
+    ],
+  },
+]
+
+function FlavorCard({ flavorProfile, setFlavorProfile, onGenerate, onBack, saving }) {
+  function toggle(key, value) {
+    setFlavorProfile(prev => ({ ...prev, [key]: prev[key] === value ? null : value }))
+  }
+
+  return (
+    <article className="flavor-card card" style={{ animation: 'fadeUp 0.22s ease both' }}>
+      <div className="flavor-card-header">
+        <h2 className="flavor-card-title">How do you like your coffee?</h2>
+        <p className="flavor-card-sub">All optional — skip any you don't mind</p>
+      </div>
+
+      {FLAVOR_SECTIONS.map(({ key, label, options }) => (
+        <div key={key} className="flavor-section">
+          <p className="flavor-section-label">{label}</p>
+          <div className="flavor-options">
+            {options.map(({ value, label: optLabel, hint }) => (
+              <button
+                key={value}
+                className={`flavor-btn${flavorProfile[key] === value ? ' active' : ''}`}
+                onClick={() => toggle(key, value)}
+              >
+                {optLabel}
+                {hint && <span className="flavor-btn-hint">{hint}</span>}
+              </button>
+            ))}
+          </div>
+        </div>
+      ))}
+
+      <div className="flavor-footer">
+        <div className="confirm-actions">
+          <button className="btn-primary" onClick={onGenerate} disabled={saving}>
+            Generate recipe <IconArrowRight size={15} />
+          </button>
+          <button className="btn-secondary" onClick={onBack}>
+            <IconArrowRight size={14} style={{ transform: 'rotate(180deg)' }} /> Back
+          </button>
+        </div>
+      </div>
+    </article>
+  )
+}
+
+/* ===== Step 4: Recipe ===== */
 function RecipeCard({ data, preview, onReset }) {
   const { name, brewGuide } = data
 

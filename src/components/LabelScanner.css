@@ -722,8 +722,104 @@
   gap: 0.75rem;
 }
 
+/* ===== Flavor Card ===== */
+.flavor-card { padding: 0; overflow: hidden; border-radius: var(--radius-xl); }
+
+.flavor-card-header {
+  padding: 1.25rem 1.25rem 1rem;
+  background: linear-gradient(135deg, rgba(220,38,38,0.04) 0%, rgba(249,115,22,0.04) 100%);
+  border-bottom: 1px solid var(--card-border);
+  position: relative;
+}
+
+.flavor-card-header::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: var(--gradient);
+  border-radius: 0 2px 2px 0;
+}
+
+.flavor-card-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 0.2rem;
+}
+
+.flavor-card-sub {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.flavor-section {
+  padding: 1rem 1.25rem;
+  border-top: 1px solid var(--card-border);
+}
+
+.flavor-section-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
+  margin: 0 0 0.6rem;
+}
+
+.flavor-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.flavor-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+  padding: 0.45rem 0.8rem;
+  border-radius: var(--radius);
+  border: 1.5px solid var(--card-border);
+  background: white;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.flavor-btn:hover {
+  border-color: var(--blue);
+  color: var(--blue);
+}
+
+.flavor-btn.active {
+  background: var(--gradient);
+  border-color: transparent;
+  color: white;
+  box-shadow: 0 2px 10px rgba(220,38,38,0.2);
+}
+
+.flavor-btn-hint {
+  font-size: 0.6rem;
+  font-weight: 500;
+  opacity: 0.7;
+}
+
+.flavor-btn.active .flavor-btn-hint { opacity: 0.85; }
+
+.flavor-footer {
+  padding: 1rem 1.25rem 1.25rem;
+  background: rgba(248,250,252,0.8);
+  border-top: 1px solid var(--card-border);
+}
+
 @media (max-width: 500px) {
   .brew-params { grid-template-columns: repeat(2, 1fr); }
   .confirm-actions { flex-direction: column; align-items: stretch; }
   .confirm-actions .btn-secondary { text-align: center; justify-content: center; }
+  .flavor-options { gap: 0.35rem; }
 }
