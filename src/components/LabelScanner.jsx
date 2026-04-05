@@ -273,7 +273,7 @@ function clearSession() {
 }
 
 /* ===== Progress Bar ===== */
-const STEP_LABELS = ['Scan', 'Confirm', 'Flavour', 'Brew']
+const STEP_LABELS = ['Scan', 'Confirm', 'Customize', 'Brew']
 
 function ProgressBar({ current }) {
   return (
@@ -667,7 +667,7 @@ function ConfirmCard({ data, preview, onNext, onReset, saving, coffeeDose, setCo
       <div className="confirm-footer">
         <div className="confirm-actions">
           <button className="btn-primary" onClick={onNext} disabled={saving}>
-            Choose flavour <IconArrowRight size={15} />
+            Customize <IconArrowRight size={15} />
           </button>
           <button className="btn-secondary" onClick={onReset}>
             <IconRefresh size={14} /> Start over
