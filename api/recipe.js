@@ -1,3 +1,5 @@
+import { verifyRecipe } from './verify.js'
+
 const API_URL = 'https://api.groq.com/openai/v1/chat/completions'
 const MODEL   = 'llama-3.3-70b-versatile'
 
@@ -132,7 +134,7 @@ Dosage selected by user: ${dosage || 15}g${flavorLine}
 Please generate the brew guide for this specific coffee. Apply your knowledge of ${labelData.origin} terroir, ${labelData.process || 'Washed'} processing, and ${labelData.roastLevel || 'Medium'} roast characteristics. Scale all water amounts precisely to match the ${dosage || 15}g dose. Use the flavor preferences to decide pour count (3–6 steps), parameters, and step naming.`
 
   const controller = new AbortController()
-  const timer = setTimeout(() => controller.abort(), 25000)
+  const timer = setTimeout(() => controller.abort(), 15000)
 
   try {
     const response = await fetch(API_URL, {
@@ -179,7 +181,15 @@ Please generate the brew guide for this specific coffee. Apply your knowledge of
       return res.status(502).json({ error: 'AI returned an incomplete recipe. Using fallback.' })
     }
 
-    return res.status(200).json(parsed)
+    // Verify the recipe and merge any corrections
+    const inputs = { origin: labelData.origin, process: labelData.process, roastLevel: labelData.roastLevel, dosage: dosage || 15 }
+    const { pass, corrections } = await verifyRecipe(parsed, inputs, apiKey).catch(e => {
+      console.warn('[recipe] verifier threw unexpectedly:', e.message)
+      return { pass: true, corrections: {} }
+    })
+    const recipe = (pass || Object.keys(corrections).length === 0) ? parsed : { ...parsed, ...corrections }
+
+    return res.status(200).json(recipe)
   } catch (e) {
     clearTimeout(timer)
     if (e.name === 'AbortError') {

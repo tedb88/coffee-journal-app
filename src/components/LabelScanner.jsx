@@ -513,7 +513,7 @@ export default function LabelScanner({ onBrewSaved }) {
         <div className="spinner-wrap card">
           <div className="spinner" />
           <p className="spinner-label">
-            Analysing label…<br />
+            Reading label (any language, output in English)…<br />
             <span style={{ fontSize: '0.8rem' }}>This takes about 5–10 seconds</span>
           </p>
         </div>
@@ -567,9 +567,26 @@ const DOSE_PRESETS = [
   { label: 'Light',   grams: 12 },
 ]
 
+/** ISO 639-1 → English name for UI; returns null if no hint needed */
+function labelLanguageHint(code) {
+  if (!code || typeof code !== 'string') return null
+  const norm = code.trim().toLowerCase().split(/[-_]/)[0]
+  if (!norm || norm === 'en' || norm === 'unknown') return null
+  const NAMES = {
+    ja: 'Japanese', ko: 'Korean', zh: 'Chinese', es: 'Spanish', fr: 'French', de: 'German',
+    it: 'Italian', pt: 'Portuguese', th: 'Thai', vi: 'Vietnamese', id: 'Indonesian',
+    nl: 'Dutch', pl: 'Polish', ru: 'Russian', ar: 'Arabic', tr: 'Turkish', sv: 'Swedish',
+    da: 'Danish', fi: 'Finnish', no: 'Norwegian', cs: 'Czech', hu: 'Hungarian',
+    hi: 'Hindi', uk: 'Ukrainian', he: 'Hebrew', el: 'Greek',
+  }
+  const name = NAMES[norm] || norm.toUpperCase()
+  return `Extracted text was translated to English (detected: ${name}).`
+}
+
 /* ===== Step 2: Confirm ===== */
 function ConfirmCard({ data, preview, onNext, onReset, saving, coffeeDose, setCoffeeDose }) {
-  const { name, origin, region, roastLevel, process, tastingNotes, variety, altitude } = data
+  const { name, origin, region, roastLevel, process, tastingNotes, variety, altitude, labelLanguage } = data
+  const translateHint = labelLanguageHint(labelLanguage)
 
   const fields = [
     origin      && { Icon: IconGlobe,    label: 'Origin',        value: origin + (region ? ` · ${region}` : '') },
@@ -598,6 +615,7 @@ function ConfirmCard({ data, preview, onNext, onReset, saving, coffeeDose, setCo
         {preview && <img src={preview} alt={name} className="confirm-thumb" />}
         <div className="confirm-header-text">
           <span className="confirm-extracted-tag">Extracted from label</span>
+          {translateHint && <p className="confirm-translate-hint">{translateHint}</p>}
           <h2 className="confirm-name">{name || 'Unknown Coffee'}</h2>
         </div>
       </div>

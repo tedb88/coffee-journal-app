@@ -1,8 +1,16 @@
 const API_URL = 'https://api.groq.com/openai/v1/chat/completions'
 const MODEL   = 'meta-llama/llama-4-scout-17b-16e-instruct'
 
-const PROMPT = `Analyze this coffee label image. Return ONLY this JSON, no extra text:
-{"name":"","origin":"country","region":"","roastLevel":"Light|Medium-Light|Medium|Medium-Dark|Dark","process":"Washed|Natural|Honey|Anaerobic|Wet-Hulled","tastingNotes":[],"variety":"","altitude":""}`
+const LABEL_SCAN_PROMPT = `You are reading a specialty coffee bag label. Text may be in any language.
+
+Rules:
+1) Read all visible product text (name, origin, region, process, roast, variety, altitude, tasting/marketing phrases).
+2) Detect the primary language of that product text. Set labelLanguage to an ISO 639-1 two-letter code (e.g. en, ja, ko, zh, es, fr, de, pt, it, th, vi). Use "en" if the label is English only. Use "unknown" only if you truly cannot tell.
+3) Every human-readable string in the JSON must be in English: translate or transliterate where needed. Use standard English country names for origin (e.g. Ethiopia, Colombia, Japan) so downstream tools can match them.
+4) Map roast and process to the allowed enum strings even if the label uses other words (choose the closest fit).
+
+Return ONLY valid JSON — no markdown fences, no commentary:
+{"name":"","origin":"","region":"","roastLevel":"Light|Medium-Light|Medium|Medium-Dark|Dark","process":"Washed|Natural|Honey|Anaerobic|Wet-Hulled","tastingNotes":[],"variety":"","altitude":"","labelLanguage":"en"}`
 
 export default async function handler(req, res) {
   // Only allow POST
@@ -41,10 +49,10 @@ export default async function handler(req, res) {
           role: 'user',
           content: [
             { type: 'image_url', image_url: { url: `data:${mimeType};base64,${base64Image}` } },
-            { type: 'text', text: PROMPT },
+            { type: 'text', text: LABEL_SCAN_PROMPT },
           ],
         }],
-        max_tokens: 250,
+        max_tokens: 320,
         temperature: 0,
       }),
       signal: controller.signal,
