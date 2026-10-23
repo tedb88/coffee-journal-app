@@ -4,17 +4,18 @@
 |---|---|
 | Product | BrewMap (working name — see decision D1) |
 | Document | Business Requirements Document (BRD) |
-| Version | 0.1 — Draft for Product Owner review |
+| Version | 0.2 — Draft for Product Owner review |
 | Date | 23 October 2026 |
 | Product Owner | tedb88 |
 | Baseline reviewed | Repository `tedb88/coffee-journal-app` at commit `e74d951` |
-| Status | **Draft.** Open decisions in §14 must be closed before solution design starts. |
+| Status | **Draft.** Decisions D2, D4, D5, D6 and D7 are closed (§14.1). Solution design is in [`SOLUTION_PLAN.md`](SOLUTION_PLAN.md). |
 
 **Change log**
 
 | Version | Date | Change |
 |---|---|---|
 | 0.1 | 2026-10-23 | Initial draft, derived from current-state review of the prototype |
+| 0.2 | 2026-10-23 | Closed D2 (Home Enthusiast persona), D4 (Hong Kong), D5 (no accounts in R1), D6 (V60 only in R1) and D7 (open-weight models; multimodal model for label reading). Applied their effects to scope, RCP-01, AI principles (new AIP-9), AI-01, NFR-08, NFR-13, constraints, risks and phasing. Added open decisions D11 (UI language) and D12 (AI spend cap). |
 
 ---
 
@@ -32,7 +33,7 @@
 
 This BRD sets the objectives, users, scope, functional, AI, data and non-functional requirements, and a proposed release phasing. It is the baseline for the next deliverable: the **Feature & AI Solution Plan**.
 
-**Decisions requested from the Product Owner** (detail in §14): primary persona (D2), launch market (D4), timing of accounts (D5), brew methods for R1 (D6), and AI provider and budget (D7).
+**Decisions taken (v0.2, §14.1).** The primary user is the home enthusiast brewer. The launch market is Hong Kong. R1 launches without accounts. R1 supports V60 only. AI uses open-weight (open-source) models only, with a multimodal model for reading labels. Still open: D1, D3, D8–D12 (§14.2).
 
 ---
 
@@ -99,7 +100,7 @@ This BRD sets the objectives, users, scope, functional, AI, data and non-functio
 | Dial-in effectiveness | % of brews made after applying a suggestion that are rated higher than the previous brew | BO2 | Not measured | ≥ 60% |
 | D30 retention | % of a signup cohort active on day 30 | BO3 | Not measured | ≥ 20% |
 | Scan-to-recipe latency | p90 time from "Analyse" to recipe displayed | BO1 | Not measured (client timeout is 35 s) | ≤ 10 s |
-| AI unit cost | Monthly AI spend ÷ monthly active users | BO5 | Not measured | ≤ US$0.10 per MAU per month (confirm under D7) |
+| AI unit cost | Monthly AI spend ÷ monthly active users | BO5 | Not measured | ≤ US$0.10 per MAU per month, within the monthly cap (D12) |
 | Data integrity | User records lost because of app behaviour | BO4, BO5 | Possible today (G4) | 0 |
 
 *These targets are initial hypotheses. They will be recalibrated after four weeks of baseline data from R1.*
@@ -112,7 +113,7 @@ This BRD sets the objectives, users, scope, functional, AI, data and non-functio
 
 - A mobile-first web app, installable as a Progressive Web App (PWA), for individual home brewers
 - Bean capture by label scan or manual entry, and a bean library with inventory and freshness tracking
-- Recipe generation for manual brew methods: pour-over (V60, Chemex, Kalita Wave), AeroPress and French press
+- Recipe generation for manual brew methods. **R1 supports V60 only (D6).** AeroPress and French press follow in R2, then Chemex and Kalita Wave.
 - Guided brew timer, brew logging, tasting feedback and a dial-in coach
 - Journal, origins map and personal insights
 - Optional account with cloud backup and multi-device sync (R2)
@@ -145,14 +146,14 @@ This BRD sets the objectives, users, scope, functional, AI, data and non-functio
 
 ### 5.2 Personas
 
-| | **P1 — Curious Starter** | **P2 — Home Enthusiast** (proposed primary) | **P3 — Origin Explorer** |
+| | **P1 — Curious Starter** | **P2 — Home Enthusiast** (primary — D2) | **P3 — Origin Explorer** |
 |---|---|---|---|
 | Profile | Owns one brewer (V60 or AeroPress) and buys specialty beans occasionally | Owns several brewers, a burr grinder and a scale. Buys 2–4 bags a month from different roasters. | Driven by variety, often travels, collects bags |
 | Today | Follows a generic YouTube recipe, unsure whether the cup is "right" | Keeps notes in a notes app or spreadsheet and dials in each bag by trial and error | Relies on memory and photos, with no structured record |
 | Needs | A simple recipe, a guided timer, plain-language fixes | Fast logging, grinder-specific settings, recipe history per bag, what changed and why | A record of every coffee, a map of origins, palate insights, what to try next |
 | Success | A good cup on the first attempt | Dialled in within 2–3 brews, and the best recipe stored against the bag | A rich personal record, and discovering what they like |
 
-**Hypothesis (D2):** design for P2 as the primary persona, because P2 has the highest brew frequency and produces the most useful data. Defaults and guidance must still let P1 succeed without expertise.
+**Decision (D2, closed):** P2, the home enthusiast brewer, is the primary persona, because P2 has the highest brew frequency and produces the most useful data. Defaults and guidance must still let P1 succeed without expertise.
 
 ### 5.3 Jobs to be done
 
@@ -244,7 +245,7 @@ This BRD sets the objectives, users, scope, functional, AI, data and non-functio
 
 | ID | Requirement | Pri | Rel | Acceptance criteria |
 |---|---|---|---|---|
-| RCP-01 | Generate recipes per brew method. V60 is a Must. AeroPress and French press are Shoulds for R1 (D6). Chemex, Kalita Wave and others are Coulds for R2. | M/S/C | R1–R2 | Each method has its own template, parameter ranges and step vocabulary (for example stir, plunge, press) |
+| RCP-01 | Generate recipes per brew method. **V60 is a Must for R1 (D6).** AeroPress and French press are Shoulds for R2. Chemex, Kalita Wave and others are Coulds for R2. The engine must be built so that adding a method means adding a template, not changing code paths. | M/S/C | R1 (V60), R2 (others) | Each method has its own template, parameter ranges and step vocabulary (for example stir, plunge, press) |
 | RCP-02 | Inputs: bean attributes, method, dose or target volume, taste preferences, equipment, days since roast, and prior brews of this bean (ratings and feedback) | M | R1 | Prior-brew input is a Should for R1 |
 | RCP-03 | Output: dose, water, ratio, temperature, grind (descriptor, plus grinder setting where available), total time, ordered steps (per-pour and cumulative water, target times, technique notes), expected cup profile, and a "why this recipe" rationale of ≤ 2 sentences | M | R1 | Schema-validated |
 | RCP-04 | **Recipe integrity is enforced in code:** step waters sum exactly to the total, times strictly increase, the final time equals the total time, and parameters stay within the method's safe ranges | M | R0 | 100% of delivered recipes pass validation across the golden set and in production telemetry |
@@ -353,9 +354,10 @@ This BRD sets the objectives, users, scope, functional, AI, data and non-functio
 | AIP-3 | **Graceful degradation.** Every AI capability has a non-AI fallback, and the core loop works offline. |
 | AIP-4 | **The human stays in control.** Suggestions are explained and editable, and never silently overwrite user data. |
 | AIP-5 | **Measured quality.** Each capability has an evaluation set, metrics and release thresholds. Prompt and model changes are gated on evals. |
-| AIP-6 | **Provider-agnostic.** A thin server-side AI gateway, with the model chosen per capability on accuracy, latency and cost evidence (D7). |
+| AIP-6 | **Provider-agnostic.** A thin server-side AI gateway, with the model chosen per capability on accuracy, latency and cost evidence. The chosen provider(s) must serve Hong Kong customers (D4). |
 | AIP-7 | **Privacy by design.** Send the minimum data needed. No user identifiers go to AI providers. Providers must not train on user data. Images are not retained after processing unless the user saves them. |
 | AIP-8 | **Cost-aware.** Each capability has a token budget. Results are cached where inputs repeat (for example, origin cards). |
+| AIP-9 | **Open-weight models only (D7).** Every model must have publicly downloadable weights under a licence that permits commercial use (Apache 2.0 or MIT preferred; any other licence reviewed before adoption). Hosted-only variants are excluded, even from an open model family. Because the weights are open, the product can move to another host or self-host without changing the model. Label reading (AI-01) uses a multimodal model. |
 
 ### 8.2 AI capability catalogue
 
@@ -376,10 +378,11 @@ This BRD sets the objectives, users, scope, functional, AI, data and non-functio
 
 | Aspect | Requirement |
 |---|---|
+| Model type | An open-weight **multimodal (vision-language) model** that reads the photo and returns structured fields directly (AIP-9). A specialist OCR model feeding a text model may be tested as a challenger, and is adopted only if it wins the evaluation. |
 | Inputs | 1–2 label photos (CAP-05) at a resolution high enough to read small print such as roast date and altitude. The current 512 px cap is to be evaluated against this. |
 | Outputs | The CAP-02 fields, each with a confidence level (high, medium, low). Absent fields are `null`. Country is normalised to ISO 3166-1. Original-language text is kept for the name. |
 | Quality bar | Core fields ≥ 90% correct. **Fabrication rate (a field filled in that is not on the label) ≤ 2%.** Roast date ≥ 85% correct when printed. |
-| Evaluation set | ≥ 100 ground-truthed bag photos covering ≥ 5 label languages, varied lighting, glare and curved bags |
+| Evaluation set | ≥ 100 ground-truthed bag photos covering ≥ 5 label languages and weighted to the Hong Kong market (English, Traditional Chinese, Japanese, Simplified Chinese, Korean), with varied lighting, glare and curved bags |
 | Latency | p90 ≤ 6 s from upload to response |
 | Fallback | Manual entry with the photo kept (CAP-08) |
 | Feedback loop | User corrections (CAP-03) are logged, with consent, to grow the evaluation set |
@@ -504,13 +507,13 @@ User ─1───*─ Equipment
 | NFR-05 | Accessibility | WCAG 2.2 AA. Brew mode is legible at arm's length. Colour is never the only way information is shown. | M | R1 |
 | NFR-06 | Security | No secrets in any client bundle, and all AI calls go through the server (dev mode included). Input validation and size limits on every endpoint. Output encoding for all user and AI text. Dependency vulnerability scanning in CI. | M | R0 |
 | NFR-07 | Abuse & cost | Per-client and global rate limits, bot protection on AI endpoints, and spend caps (OPS-01/02) | M | R0 |
-| NFR-08 | Privacy & compliance | Privacy notice. Consent for analytics and for AI-improvement data use. Data export and deletion. Compliance with data protection law in the launch markets (for example the Hong Kong PDPO, and GDPR / UK GDPR if serving those users) (D4). | M | Before public launch |
+| NFR-08 | Privacy & compliance | Comply with the **Hong Kong Personal Data (Privacy) Ordinance (PDPO)** and its six Data Protection Principles (D4). This means: a Personal Information Collection Statement at first use; a privacy policy; consent for analytics and for AI-improvement data use; data access and correction requests answered within 40 days; disclosure of processing outside Hong Kong (AI, analytics); and data export and deletion. AI governance follows the PCPD's *Artificial Intelligence: Model Personal Data Protection Framework*. | M | Before public launch |
 | NFR-09 | Reliability | An AI provider outage does not block the core loop. Serverless availability ≥ 99.5% per month. Sync is safe under conflicting edits. | S | R1–R2 |
 | NFR-10 | Durability | Zero data loss caused by app behaviour. Daily cloud backups once accounts exist. | M | R1 / R2 |
 | NFR-11 | Maintainability | Typed schemas shared by client and server (TypeScript or a schema library). Rules engine and validator unit-tested with ≥ 90% line coverage. CI runs lint, type check, tests and evals. | M | R0 |
 | NFR-12 | Observability | Structured server logs, client error tracking, and a KPI dashboard | M | R1 |
-| NFR-13 | Localisation | English UI in R1, with an i18n-ready architecture. Labels in any language are extracted to English, and the original text is kept. | S | R1 |
-| NFR-14 | Cost | AI cost per MAU within the §3 target. Hosting within the budget agreed under D7. | S | R1 |
+| NFR-13 | Localisation | English UI in R1, with an i18n-ready architecture so a Traditional Chinese (zh-HK) UI can follow (D11). Labels in any language are extracted to English, and the original text is kept. Hong Kong defaults: metric units, °C, and DD/MM/YYYY dates, with ambiguous label dates read day-first. | S | R1 |
+| NFR-14 | Cost | AI cost per MAU within the §3 target. AI spend within the monthly cap (D12). | S | R1 |
 | NFR-15 | Usability | A new user completes J1 without help in ≤ 3 min, excluding brew time (usability test, n ≥ 5) | S | R1 |
 
 ---
@@ -536,6 +539,7 @@ User ─1───*─ Equipment
 | C2 | iOS Safari may clear script-written storage for sites that are not installed after about 7 days without use. This is why installation as a PWA, persistent storage, export reminders and, from R2, cloud sync are all required. |
 | C3 | AI provider pricing, rate limits and model availability can change without notice. This is why AIP-6 requires a provider-agnostic gateway. |
 | C4 | The OpenStreetMap tile usage policy does not permit heavy production use, so a compliant tile provider is needed before public launch |
+| C5 | Several major AI API providers do not serve Hong Kong. The current provider (Groq) appears to restrict Greater China, although its position on Hong Kong is unconfirmed. AI must therefore run on open-weight models (AIP-9) through a provider that confirms it serves Hong Kong customers. |
 
 **External dependencies:** AI provider APIs, the Vercel hosting platform, a map tile provider, and from R2 an authentication provider and a cloud database with object storage.
 
@@ -552,7 +556,8 @@ User ─1───*─ Equipment
 | R5 | Users do not log or rate brews, so the learning loop starves | M | H | Rating in ≤ 15 s, automatic transition from brew mode, immediate payoff through the dial-in suggestion |
 | R6 | Scope creep and a return to undirected iteration | H | M | This BRD as the baseline, change control (§15), release exit criteria (§13) |
 | R7 | Provider lock-in or model deprecation | M | M | AI gateway (AIP-6); evals make a model swap a measured, low-risk change |
-| R8 | Privacy non-compliance when accounts launch | L | H | NFR-08 checklist as an R2 exit criterion |
+| R8 | Privacy non-compliance at launch, or later when accounts launch | L | H | NFR-08 PDPO checklist as an exit criterion for R1 and again for R2 |
+| R9 | The AI provider is unavailable to Hong Kong customers (C5) | M | H | Migrate to an HK-eligible provider in R0. Configure a second provider for failover. Open weights keep self-hosting available as an exit. |
 
 ---
 
@@ -563,28 +568,35 @@ User ─1───*─ Equipment
 | Release | Theme | Requirements in scope | Exit criteria |
 |---|---|---|---|
 | **R0 — Foundation** | Make it safe and solid | OPS-01, OPS-02, OPS-06, RCP-04, RCP-05, RCP-06, AI-03, BEAN-01, JRN-05, DR-04, DR-05, NFR-06, NFR-07, NFR-11, AIG-01 (initial sets) | No AI endpoint without limits. 0 invalid recipes on the golden set. Legacy data migration passes tests. CI green. |
-| **R1 — Daily Driver (MVP)** | Complete the core loop | CAP-01–04, 06, 08 · BEAN-02–05 · RCP-01 (V60 + D6 methods), 02, 03, 07, 08, 09 · BRW-01–07 · LOG-01–05 · DIAL-01–05 · JRN-01–04 · MAP-01, 02 · PRF-01–03, 05 · ACC-01 · OPS-03–05, 07 · AI-01, AI-02, AI-04 (rules), AI-05 · AIG-02–05 · NFR-01–05, 12, 13, 15 | KPI instrumentation live. Usability test passed. All AI eval thresholds met. |
-| **R2 — Personal & Synced** | Learn and persist | ACC-02–05 · PRF-04 · CAP-05, 07 · RCP-01 (remaining methods) · MAP-03–05 · INS-01–03 · LOG-06 · AI-04 (AI layer), AI-06, AI-08 · NFR-08, 09, 10 | Privacy compliance checklist complete. Sync conflict tests passed. |
+| **R1 — Daily Driver (MVP)** | Complete the core loop | CAP-01–04, 06, 08 · BEAN-02–05 · RCP-01 (V60), 02, 03, 07, 08, 09 · BRW-01–07 · LOG-01–05 · DIAL-01–05 · JRN-01–04 · MAP-01, 02 · PRF-01–03, 05 · ACC-01 · OPS-03–05, 07 · AI-01, AI-02, AI-04 (rules), AI-05 · AIG-02–05 · NFR-01–05, 08, 12, 13, 15 | KPI instrumentation live. Usability test passed. All AI eval thresholds met. PDPO checklist complete (NFR-08). |
+| **R2 — Personal & Synced** | Learn and persist | ACC-02–05 (accounts re-confirmed at the R1 review, D5) · PRF-04 · CAP-05, 07 · RCP-01 (AeroPress, French press, then Chemex and Kalita Wave) · MAP-03–05 · INS-01–03 · LOG-06 · AI-04 (AI layer), AI-06, AI-08 · NFR-08, 09, 10 | PDPO checklist re-run for accounts and cloud data. Sync conflict tests passed. |
 | **R3 — Explore** (candidate) | Grow and monetise | RCP-10, BRW-08, BEAN-06, INS-04, AI-07, monetisation (D3) | Business case approved |
 
 ---
 
-## 14. Open Decisions
+## 14. Decisions
+
+### 14.1 Decisions log (closed)
+
+| ID | Decision | Outcome | Date | Effect on this BRD |
+|---|---|---|---|---|
+| D2 | Primary persona | **Home brewer: P2 Home Enthusiast**, with P1 still able to succeed | 2026-10-23 | §5.2 |
+| D4 | Launch market | **Hong Kong** | 2026-10-23 | NFR-08 (PDPO), NFR-13 (HK defaults), C5, AI-01 eval languages |
+| D5 | Timing of accounts | **R1 launches without accounts.** Guest mode, on-device data, export and import. Accounts stay planned for R2, to be re-confirmed at the R1 review. | 2026-10-23 | ACC-01 (R1); ACC-02–05 (R2) |
+| D6 | Brew methods in R1 | **V60 only** | 2026-10-23 | §4.1, RCP-01, §13 |
+| D7 | AI models | **Open-weight (open-source) models only. A multimodal model is used wherever label reading (OCR) is needed.** The provider and specific models are selected by evaluation (see `SOLUTION_PLAN.md`). | 2026-10-23 | AIP-6, AIP-9, AI-01, C5, R9 |
+
+### 14.2 Open decisions
 
 | ID | Decision | Options | Recommendation | Needed by |
 |---|---|---|---|---|
 | D1 | Product name and positioning | "BrewMap" / "Bean Sommelier" (the name used in the AI context documents) / a new name | Keep "BrewMap" as the working name, and decide before public launch | R1 launch |
-| D2 | Primary persona | P1 Starter / P2 Enthusiast / P3 Explorer | P2 primary, with P1 able to succeed | Start of R1 design |
 | D3 | Business model | Free hobby product / freemium (AI usage limits) / subscription / roaster partnerships | Free through R2, with instrumentation in place for freemium (AI usage is a natural premium boundary) | Before R3 |
-| D4 | Launch market and default units | Hong Kong / wider Asia / global English | Confirm. This sets the privacy regime (NFR-08) and the default units. | Start of R1 |
-| D5 | Timing of accounts | Guest-only in R1 / accounts in R1 | Guest-first R1 with export, accounts in R2, unless multi-device use is required at launch | R1 planning |
-| D6 | Brew methods in R1 | V60 only / + AeroPress / + French press / + Chemex | V60 + AeroPress + French press: very common home methods with clearly different techniques | R1 planning |
-| D7 | AI provider(s) and budget | Keep Groq (Llama models) / Anthropic Claude / mixed per capability. Monthly AI budget cap. | Choose per capability through an eval bake-off in R0. Set a monthly budget cap now. | R0 |
 | D8 | Platform | PWA / native wrapper (for example Capacitor) / fully native | PWA in R1. Reconsider a wrapper if iOS limits (haptics, storage) block KPIs. | R1 |
-| D9 | Expert reviewer for recipes | Barista or Q Grader contact / community panel | Engage one experienced reviewer for the 50-case golden set | R1 |
+| D9 | Expert reviewer for recipes | Barista or Q Grader contact / community panel | Engage one experienced Hong Kong barista or Q Grader to review the 50-case golden set | Mid-R1 |
 | D10 | Rating scale | 1–5 / 1–10 (the scale in the AI context documents) | 1–5 overall rating plus balance sliders; quicker, and enough for dial-in | R1 design |
-
----
+| D11 | UI language | English only / English + Traditional Chinese (zh-HK) | English in R1 with i18n scaffolding. Traditional Chinese in R2. | R1 design |
+| D12 | Monthly AI spend cap | Any amount | US$20 per month hard cap, with alerts at 50% and 80% (rationale in `SOLUTION_PLAN.md` §7) | Start of R0 |
 
 ## 15. Change Control
 
@@ -592,7 +604,7 @@ User ─1───*─ Equipment
 2. **Requirement IDs are permanent.** A deprecated requirement is struck through, not deleted. A new requirement takes the next free ID in its area.
 3. Every feature pull request names the requirement IDs it implements (for example "Implements LOG-01, LOG-02").
 4. Changes to priority, release or scope need Product Owner approval and are recorded in the change log.
-5. Once decided, open decisions (§14) move to a "Decisions log" with the date and rationale.
+5. Once decided, open decisions (§14.2) move to the decisions log (§14.1) with the date and outcome.
 
 ---
 
