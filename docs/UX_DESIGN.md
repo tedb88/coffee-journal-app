@@ -47,6 +47,13 @@ Three choices drive the design:
 
 ## 3. Design system (BrewMap's own)
 
+The full system is published as the **BrewMap design system**: https://claude.ai/artifact/7ohTpUvfi5wAzTFwwnvzta (private until shared). It holds the tokens (light and dark brew mode), the type styles, the icons, 16 live React components and a usage guide. It is the source of truth; the table below is a summary.
+
+**Where the system differs from the first canvas** (the canvas is to be aligned):
+- Control borders: `#CBCDC7` → `#858884`, so inputs and outline buttons meet 3:1 contrast. Dark theme: `#6E7378`.
+- Radii: reduced to four (6, 12, 20, full). The canvas's 4px flag, 14px options and 16px history cards fold into these.
+- Figure sizes: unified at 20px. The canvas used 18–22px.
+
 | Role | Value | Use |
 |---|---|---|
 | Ground | `#F5F5F2` | Page background (neutral paper, not cream) |
