@@ -3,10 +3,10 @@
 | Field | Value |
 |---|---|
 | Document | Feature & AI Solution Plan |
-| Version | 0.1 — Draft for Product Owner review |
+| Version | 0.2 — Draft for Product Owner review |
 | Date | 23 October 2026 |
 | Product Owner | tedb88 |
-| Input | [`BRD.md`](BRD.md) v0.2 (decisions D2, D4, D5, D6, D7 closed) |
+| Input | [`BRD.md`](BRD.md) v0.3 (decisions D2, D4, D5, D6, D7, D11, D12 closed) |
 | Scope | How releases R0 (Foundation) and R1 (Daily Driver) will be built. R2 and later are covered only where R1 design choices affect them. |
 | Status | **Draft.** Decisions in §12 are needed before R0 starts. |
 
@@ -26,7 +26,7 @@
 
 **Effort (indicative, ±30%).** R0 is about 17 developer-days and R1 about 37 developer-days. At one full-time developer with AI-assisted development and 20% contingency, that is roughly **3–4 weeks for R0 and 8–9 weeks for R1**. Calendar time scales with part-time capacity.
 
-**Decisions needed now (§12):** AI spend cap (D12), UI language (D11), expert reviewer (D9), rating scale (D10), plus confirmation of how D2 and D5 were interpreted.
+**Decisions taken since v0.1:** a US$20 per month AI spend cap (D12) and an English UI (D11). **Still needed (§12):** expert reviewer (D9), rating scale (D10), plus confirmation of how D2 and D5 were interpreted.
 
 ---
 
@@ -41,6 +41,8 @@
 | D5 Accounts | None in R1 | IndexedDB, persistent-storage request, export/import, PWA install. No user database on the server. |
 | D6 Methods | V60 only in R1 | The engine is method-agnostic (templates), but R1 ships and validates only the V60 template |
 | D7 AI | Open-weight models; multimodal for OCR | Model policy (§5.2), shortlist (§5.3), provider strategy (§5.4) |
+| D11 Language | English | English UI, with strings kept in one catalogue. No translation work is planned. |
+| D12 Spend cap | US$20 per month | Hard cap in the spend guard (§4.11), alerts at 50% and 80% |
 
 ### 2.2 Planning assumptions
 
@@ -221,7 +223,7 @@ The decision table follows the strength-versus-extraction logic of the brewing c
 |---|---|---|
 | Bot protection | Invisible Cloudflare Turnstile token on every AI request, verified on the server | — |
 | Rate limit (OPS-01) | Upstash sliding window keyed on a hash of client IP plus a random device ID; the hash expires within 24 h | Scan 10 per hour and 30 per day; recipe 30 per hour and 100 per day; global 2,000 AI calls per day |
-| Spend guard (OPS-02) | Each call's cost is calculated from token usage × the registry price table and added to daily and monthly counters | Hard cap D12 (US$20 per month proposed). Alerts at 50%, 80% and 100%. At the cap, endpoints return `fallback: true` and the app uses manual entry and the rules recipe. |
+| Spend guard (OPS-02) | Each call's cost is calculated from token usage × the registry price table and added to daily and monthly counters | Hard cap of US$20 per month (D12). Alerts at 50%, 80% and 100%. At the cap, endpoints return `fallback: true` and the app uses manual entry and the rules recipe. |
 | Telemetry (AIG-03) | One structured log line per AI call: capability, model, prompt version, latency, tokens, cost, validation result, whether the fallback was used. No images, free text or identifiers. | Retained ≤ 90 days (DR-06) |
 | Errors (OPS-04) | Sentry for the client and functions | Free tier |
 | Analytics (OPS-03) | KPI events (§3 of the BRD) only after consent, with no personal data in payloads | Privacy-oriented tool, chosen in R1 |
@@ -380,7 +382,7 @@ These figures are to be confirmed against the selected provider's price list.
 | 500 | US$1.50 | US$6 |
 | 1,500 | US$4.50 | US$18 |
 
-**Recommended spend cap (D12): US$20 per month (about HK$156).** That covers about 1,500 MAU of legitimate use at the high estimate while bounding the damage from abuse. Review it monthly (AIG-04).
+**Spend cap (D12, decided): US$20 per month (about HK$156).** That covers about 1,500 MAU of legitimate use at the high estimate while bounding the damage from abuse. Review it monthly (AIG-04).
 
 ### 7.3 Fixed costs (R1)
 
@@ -475,7 +477,7 @@ AI use is documented against the PCPD *Artificial Intelligence: Model Personal D
 
 ### 10.2 Localisation
 
-- **UI language:** English in R1, with i18n scaffolding (string catalogue) so a Traditional Chinese (zh-HK) UI can follow in R2 (D11).
+- **UI language:** English (D11). UI strings are kept in one catalogue, which costs little and keeps a later translation possible.
 - **Defaults:** metric units, °C, DD/MM/YYYY display, and day-first parsing of ambiguous label dates.
 - **Evaluation:** the label set is weighted to the bags sold in Hong Kong (§6.1).
 
@@ -499,8 +501,6 @@ AI use is documented against the PCPD *Artificial Intelligence: Model Personal D
 
 | ID | Decision | Recommendation |
 |---|---|---|
-| D12 | Monthly AI spend cap | **US$20 per month hard cap**, alerts at 50% and 80% (§7.2) |
-| D11 | UI language | English in R1 with i18n scaffolding; Traditional Chinese in R2 |
 | D10 | Rating scale | 1–5 plus two balance sliders (this plan assumes it) |
 | D9 | Expert reviewer | One HK barista or Q Grader, about half a day, to review the recipe golden set and freshness windows |
 | — | **Confirm interpretations** | D2 "home brewer" taken as **P2 Home Enthusiast**. D5 "without" taken as **R1 without accounts, with accounts reconsidered at the R1 review**. |

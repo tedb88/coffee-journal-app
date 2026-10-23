@@ -4,11 +4,11 @@
 |---|---|
 | Product | BrewMap (working name — see decision D1) |
 | Document | Business Requirements Document (BRD) |
-| Version | 0.2 — Draft for Product Owner review |
+| Version | 0.3 — Draft for Product Owner review |
 | Date | 23 October 2026 |
 | Product Owner | tedb88 |
 | Baseline reviewed | Repository `tedb88/coffee-journal-app` at commit `e74d951` |
-| Status | **Draft.** Decisions D2, D4, D5, D6 and D7 are closed (§14.1). Solution design is in [`SOLUTION_PLAN.md`](SOLUTION_PLAN.md). |
+| Status | **Draft.** Decisions D2, D4, D5, D6, D7, D11 and D12 are closed (§14.1). Solution design is in [`SOLUTION_PLAN.md`](SOLUTION_PLAN.md). |
 
 **Change log**
 
@@ -16,6 +16,7 @@
 |---|---|---|
 | 0.1 | 2026-10-23 | Initial draft, derived from current-state review of the prototype |
 | 0.2 | 2026-10-23 | Closed D2 (Home Enthusiast persona), D4 (Hong Kong), D5 (no accounts in R1), D6 (V60 only in R1) and D7 (open-weight models; multimodal model for label reading). Applied their effects to scope, RCP-01, AI principles (new AIP-9), AI-01, NFR-08, NFR-13, constraints, risks and phasing. Added open decisions D11 (UI language) and D12 (AI spend cap). |
+| 0.3 | 2026-10-23 | Closed D11 (English UI) and D12 (US$20 per month AI spend cap). Updated NFR-13 and NFR-14. |
 
 ---
 
@@ -33,7 +34,7 @@
 
 This BRD sets the objectives, users, scope, functional, AI, data and non-functional requirements, and a proposed release phasing. It is the baseline for the next deliverable: the **Feature & AI Solution Plan**.
 
-**Decisions taken (v0.2, §14.1).** The primary user is the home enthusiast brewer. The launch market is Hong Kong. R1 launches without accounts. R1 supports V60 only. AI uses open-weight (open-source) models only, with a multimodal model for reading labels. Still open: D1, D3, D8–D12 (§14.2).
+**Decisions taken (v0.2, §14.1).** The primary user is the home enthusiast brewer. The launch market is Hong Kong. R1 launches without accounts. R1 supports V60 only. AI uses open-weight (open-source) models only, with a multimodal model for reading labels. Monthly AI spend is capped at US$20 and the app is in English. Still open: D1, D3, D8, D9 and D10 (§14.2).
 
 ---
 
@@ -100,7 +101,7 @@ This BRD sets the objectives, users, scope, functional, AI, data and non-functio
 | Dial-in effectiveness | % of brews made after applying a suggestion that are rated higher than the previous brew | BO2 | Not measured | ≥ 60% |
 | D30 retention | % of a signup cohort active on day 30 | BO3 | Not measured | ≥ 20% |
 | Scan-to-recipe latency | p90 time from "Analyse" to recipe displayed | BO1 | Not measured (client timeout is 35 s) | ≤ 10 s |
-| AI unit cost | Monthly AI spend ÷ monthly active users | BO5 | Not measured | ≤ US$0.10 per MAU per month, within the monthly cap (D12) |
+| AI unit cost | Monthly AI spend ÷ monthly active users | BO5 | Not measured | ≤ US$0.10 per MAU per month, within the US$20 monthly cap (D12) |
 | Data integrity | User records lost because of app behaviour | BO4, BO5 | Possible today (G4) | 0 |
 
 *These targets are initial hypotheses. They will be recalibrated after four weeks of baseline data from R1.*
@@ -512,8 +513,8 @@ User ─1───*─ Equipment
 | NFR-10 | Durability | Zero data loss caused by app behaviour. Daily cloud backups once accounts exist. | M | R1 / R2 |
 | NFR-11 | Maintainability | Typed schemas shared by client and server (TypeScript or a schema library). Rules engine and validator unit-tested with ≥ 90% line coverage. CI runs lint, type check, tests and evals. | M | R0 |
 | NFR-12 | Observability | Structured server logs, client error tracking, and a KPI dashboard | M | R1 |
-| NFR-13 | Localisation | English UI in R1, with an i18n-ready architecture so a Traditional Chinese (zh-HK) UI can follow (D11). Labels in any language are extracted to English, and the original text is kept. Hong Kong defaults: metric units, °C, and DD/MM/YYYY dates, with ambiguous label dates read day-first. | S | R1 |
-| NFR-14 | Cost | AI cost per MAU within the §3 target. AI spend within the monthly cap (D12). | S | R1 |
+| NFR-13 | Localisation | English UI (D11). UI strings are kept in one catalogue so another language could be added later at low cost. Labels in any language are extracted to English, and the original text is kept. Hong Kong defaults: metric units, °C, and DD/MM/YYYY dates, with ambiguous label dates read day-first. | S | R1 |
+| NFR-14 | Cost | AI cost per MAU within the §3 target. AI spend within the US$20 monthly cap (D12). | S | R1 |
 | NFR-15 | Usability | A new user completes J1 without help in ≤ 3 min, excluding brew time (usability test, n ≥ 5) | S | R1 |
 
 ---
@@ -585,6 +586,8 @@ User ─1───*─ Equipment
 | D5 | Timing of accounts | **R1 launches without accounts.** Guest mode, on-device data, export and import. Accounts stay planned for R2, to be re-confirmed at the R1 review. | 2026-10-23 | ACC-01 (R1); ACC-02–05 (R2) |
 | D6 | Brew methods in R1 | **V60 only** | 2026-10-23 | §4.1, RCP-01, §13 |
 | D7 | AI models | **Open-weight (open-source) models only. A multimodal model is used wherever label reading (OCR) is needed.** The provider and specific models are selected by evaluation (see `SOLUTION_PLAN.md`). | 2026-10-23 | AIP-6, AIP-9, AI-01, C5, R9 |
+| D11 | UI language | **English** | 2026-10-23 | NFR-13 |
+| D12 | Monthly AI spend cap | **US$20 per month hard cap**, with alerts at 50% and 80% | 2026-10-23 | KPI "AI unit cost", NFR-14, OPS-02 |
 
 ### 14.2 Open decisions
 
@@ -595,8 +598,6 @@ User ─1───*─ Equipment
 | D8 | Platform | PWA / native wrapper (for example Capacitor) / fully native | PWA in R1. Reconsider a wrapper if iOS limits (haptics, storage) block KPIs. | R1 |
 | D9 | Expert reviewer for recipes | Barista or Q Grader contact / community panel | Engage one experienced Hong Kong barista or Q Grader to review the 50-case golden set | Mid-R1 |
 | D10 | Rating scale | 1–5 / 1–10 (the scale in the AI context documents) | 1–5 overall rating plus balance sliders; quicker, and enough for dial-in | R1 design |
-| D11 | UI language | English only / English + Traditional Chinese (zh-HK) | English in R1 with i18n scaffolding. Traditional Chinese in R2. | R1 design |
-| D12 | Monthly AI spend cap | Any amount | US$20 per month hard cap, with alerts at 50% and 80% (rationale in `SOLUTION_PLAN.md` §7) | Start of R0 |
 
 ## 15. Change Control
 
