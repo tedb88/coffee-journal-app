@@ -58,7 +58,7 @@ Three choices drive the design:
 | Accent (water) | `#0F6E8C` | Data only: the pour curve, the change to make, the freshness window |
 | Brew mode | ground `#0C0D0E`, card `#17191B`, muted `#A9AEB2`, accent `#5BBAD5` | High-contrast dark screen for brewing at arm's length |
 | Status | positive `#247B50`, notice `#FFFBEB` / `#FDE68A` / `#92400E` | Freshness dots; the "Check" flag on low-confidence fields |
-| Type | IBM Plex Sans 400/500/600, tabular figures on every number | One family; sizes 12/13/14/16/20/24, plus 64 on the brew target only |
+| Type | Manrope 400/500/600/700, tabular figures on every number (replaced IBM Plex Sans after review) | One family; sizes 12/13/14/16/20/24, plus 64 on the brew target only |
 | Shape | Cards 20 px radius, buttons and chips fully round, 44 px minimum touch target | One radius family |
 | Layout | 390 px phone, 20 px side margins, bottom nav of 4 (Today, Beans, Journal, Map) | Flow screens use a back button plus a pinned primary action |
 
