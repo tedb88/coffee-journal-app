@@ -2,15 +2,15 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "BrewMap Dev Server",
-      "runtimeExecutable": "/Users/jasonlau/.nvm/versions/node/v24.14.1/bin/node",
-      "runtimeArgs": ["node_modules/.bin/vite"],
+      "name": "BrewMap dev server (app and API)",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
       "port": 5173
     },
     {
-      "name": "BrewMap Preview (build)",
-      "runtimeExecutable": "/Users/jasonlau/.nvm/versions/node/v24.14.1/bin/node",
-      "runtimeArgs": ["node_modules/.bin/vite", "preview"],
+      "name": "BrewMap preview (production build, no API)",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "preview"],
       "port": 4173
     }
   ]

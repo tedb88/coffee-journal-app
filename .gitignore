@@ -22,3 +22,17 @@ dist-ssr/
 *.sln
 *.sw?
 .claude/
+
+# Test and eval output
+coverage/
+test-results/
+playwright-report/
+evals/reports/
+
+# Label photos are third-party branding: never commit them (Solution Plan §6.1)
+evals/labels/photos/
+*.heic
+*.HEIC
+
+# Local skill installs
+.taste-skill/
