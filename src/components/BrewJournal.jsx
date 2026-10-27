@@ -1,4 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
+import { deleteBrew, listJournal } from '../data/repositories.ts'
+import { entryView, matchesSearch } from '../lib/journal.ts'
+import { usePhotoUrl } from '../lib/usePhotoUrl.ts'
 import {
   IconBook, IconGlobe, IconFlame, IconGear,
   IconTrash, IconChevronDown, IconChevronUp, IconInbox,
@@ -7,14 +10,9 @@ import {
 } from './Icons.jsx'
 import './BrewJournal.css'
 
-const STORAGE_KEY = 'brewmap_journal'
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December']
-
-function loadJournal() {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]') } catch { return [] }
-}
 
 function formatDate(isoString) {
   const d = new Date(isoString)
@@ -144,17 +142,7 @@ function CalendarView({ entries, entriesByDate, onSelectEntry, expanded, toggleE
 function LogView({ entries, expanded, toggleExpand, onDelete }) {
   const [search, setSearch] = useState('')
 
-  const filtered = useMemo(() => {
-    if (!search.trim()) return entries
-    const q = search.toLowerCase()
-    return entries.filter(e =>
-      (e.name || '').toLowerCase().includes(q) ||
-      (e.origin || '').toLowerCase().includes(q) ||
-      (e.process || '').toLowerCase().includes(q) ||
-      (e.roastLevel || '').toLowerCase().includes(q) ||
-      (e.tastingNotes || []).some(n => n.toLowerCase().includes(q))
-    )
-  }, [entries, search])
+  const filtered = useMemo(() => entries.filter(e => matchesSearch(e, search)), [entries, search])
 
   return (
     <div className="log-view">
@@ -164,6 +152,7 @@ function LogView({ entries, expanded, toggleExpand, onDelete }) {
           type="text"
           className="log-search-input"
           placeholder="Search by origin, roast, notes..."
+          aria-label="Search your journal"
           value={search}
           onChange={e => setSearch(e.target.value)}
         />
@@ -191,20 +180,22 @@ function LogView({ entries, expanded, toggleExpand, onDelete }) {
 
 /* ===== Entry Card (shared) ===== */
 function EntryCard({ entry, expanded, toggleExpand, onDelete }) {
+  const photoUrl = usePhotoUrl(entry.photoId)
+  const guide = entry.guide
   return (
     <li className="journal-entry card">
       <div className="journal-entry-header">
-        {entry.imageDataUrl && (
-          <img src={entry.imageDataUrl} alt={entry.name} className="journal-thumb" />
+        {photoUrl && (
+          <img src={photoUrl} alt="" className="journal-thumb" />
         )}
         <div className="journal-entry-info">
-          <div className="journal-entry-name">{entry.name || 'Unknown Coffee'}</div>
+          <div className="journal-entry-name">{entry.name}</div>
           <div className="journal-entry-meta">
             {entry.origin     && <span className="je-tag"><IconGlobe size={11} /> {entry.origin}</span>}
             {entry.roastLevel && <span className="je-tag"><IconFlame size={11} /> {entry.roastLevel}</span>}
             {entry.process    && <span className="je-tag"><IconGear size={11} /> {entry.process}</span>}
           </div>
-          {entry.tastingNotes?.length > 0 && (
+          {entry.tastingNotes.length > 0 && (
             <div className="journal-tasting-notes">{entry.tastingNotes.join(' · ')}</div>
           )}
           <div className="journal-entry-date">{formatDate(entry.savedAt)}</div>
@@ -226,20 +217,20 @@ function EntryCard({ entry, expanded, toggleExpand, onDelete }) {
         </div>
       </div>
 
-      {expanded[entry.id] && entry.brewGuide && (
+      {expanded[entry.id] && guide && (
         <div className="journal-brew-guide">
           <div className="jbg-params">
-            <ParamPill Icon={IconScale}       label="Coffee" value={entry.brewGuide.coffeeAmount} />
-            <ParamPill Icon={IconDroplet}     label="Water"  value={entry.brewGuide.waterAmount} />
-            <ParamPill Icon={IconRuler}       label="Ratio"  value={entry.brewGuide.ratio} />
-            <ParamPill Icon={IconThermometer} label="Temp"   value={entry.brewGuide.waterTemp} />
-            <ParamPill Icon={IconGrid}        label="Grind"  value={entry.brewGuide.grindSize} />
-            <ParamPill Icon={IconClock}       label="Time"   value={entry.brewGuide.totalTime} />
+            <ParamPill Icon={IconScale}       label="Coffee" value={guide.coffeeAmount} />
+            <ParamPill Icon={IconDroplet}     label="Water"  value={guide.waterAmount} />
+            <ParamPill Icon={IconRuler}       label="Ratio"  value={guide.ratio} />
+            <ParamPill Icon={IconThermometer} label="Temp"   value={guide.waterTemp} />
+            <ParamPill Icon={IconGrid}        label="Grind"  value={guide.grindSize} />
+            <ParamPill Icon={IconClock}       label="Time"   value={guide.totalTime} />
           </div>
 
-          {entry.brewGuide.steps?.length > 0 && (
+          {guide.steps?.length > 0 && (
             <ol className="jbg-steps">
-              {entry.brewGuide.steps.map((step, i) => (
+              {guide.steps.map((step, i) => (
                 <li key={i} className="jbg-step">
                   <div className="jbg-step-top">
                     <span className="jbg-step-num">{i + 1}</span>
@@ -253,10 +244,10 @@ function EntryCard({ entry, expanded, toggleExpand, onDelete }) {
             </ol>
           )}
 
-          {entry.brewGuide.tips && (
+          {guide.tips && (
             <div className="jbg-tip">
               <span className="jbg-tip-icon"><IconLightbulb size={14} /></span>
-              {entry.brewGuide.tips}
+              {guide.tips}
             </div>
           )}
         </div>
@@ -267,11 +258,19 @@ function EntryCard({ entry, expanded, toggleExpand, onDelete }) {
 
 /* ===== Main Component ===== */
 export default function BrewJournal({ journalVersion, onDelete }) {
-  const [entries, setEntries] = useState(loadJournal)
+  const [entries, setEntries] = useState([])
+  const [loaded, setLoaded] = useState(false)
+  const [loadError, setLoadError] = useState(null)
   const [expanded, setExpanded] = useState({})
   const [view, setView] = useState('calendar')
 
-  useEffect(() => { setEntries(loadJournal()) }, [journalVersion])
+  useEffect(() => {
+    let live = true
+    listJournal()
+      .then(list => { if (live) { setEntries(list.map(entryView)); setLoaded(true) } })
+      .catch(() => { if (live) { setLoadError('Your journal could not be opened. Reload the page to try again.'); setLoaded(true) } })
+    return () => { live = false }
+  }, [journalVersion])
 
   const entriesByDate = useMemo(() => {
     const map = {}
@@ -283,10 +282,11 @@ export default function BrewJournal({ journalVersion, onDelete }) {
     return map
   }, [entries])
 
-  function handleDelete(id) {
-    const updated = entries.filter(e => e.id !== id)
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated))
-    setEntries(updated)
+  async function handleDelete(id) {
+    const entry = entries.find(e => e.id === id)
+    if (!window.confirm(`Delete this brew of ${entry?.name ?? 'this coffee'}? This cannot be undone.`)) return
+    await deleteBrew(id)
+    setEntries(prev => prev.filter(e => e.id !== id))
     onDelete()
   }
 
@@ -320,7 +320,9 @@ export default function BrewJournal({ journalVersion, onDelete }) {
         </button>
       </div>
 
-      {entries.length === 0 ? (
+      {loadError ? (
+        <div className="error-box" role="alert">{loadError}</div>
+      ) : !loaded ? null : entries.length === 0 ? (
         <div className="journal-empty card">
           <div className="journal-empty-icon"><IconInbox size={36} /></div>
           <p>No brews saved yet.</p>
