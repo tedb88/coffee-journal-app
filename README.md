@@ -2,7 +2,7 @@
 
 Scan a coffee bag, get a V60 recipe built for that coffee, and keep a journal and origin map of what you brew. Mobile-first web app for home brewers in Hong Kong.
 
-**Status: v0.2.0, release R0 (Foundation).** R0 makes the prototype safe and solid: one rules engine, guaranteed-valid recipes, on-device storage with migration, abuse and spend protection, an AI gateway for open-weight models, tests, CI and an eval harness. The redesigned screens arrive in R1 (see [docs/UX_DESIGN.md](docs/UX_DESIGN.md)).
+**Status: v0.3.0.** R0 (Foundation) made the prototype safe and solid: one rules engine, guaranteed-valid recipes, on-device storage with migration, abuse and spend protection, an AI gateway for open-weight models, tests, CI and an eval harness. v0.3.0 adds the redesigned key journey from [docs/UX_DESIGN.md](docs/UX_DESIGN.md): Today, scan and check, recipe, guided brew, taste with one change for next time, and the bag page, plus Beans, Journal and Map. See [CHANGELOG.md](CHANGELOG.md) for what is still to come.
 
 ## Documents (read these first)
 
@@ -52,7 +52,7 @@ All settings are server-side except `VITE_TURNSTILE_SITE_KEY`. See [.env.example
 | `npm run build` / `npm run preview` | Production build / serve it (no API) |
 | `npm run lint` · `npm run format` · `npm run typecheck` | ESLint · Prettier (new TypeScript code) · TypeScript |
 | `npm test` · `npm run test:coverage` | Unit and integration tests · with coverage thresholds |
-| `npm run e2e` | Playwright journeys on mobile Chromium |
+| `npm run e2e` | Playwright journeys on mobile Chromium (the key journey, failed scan, manual entry and log, migration, undo, brew mode) |
 | `npm run eval:recipes` | Rules engine over the 50-case golden set (the CI gate). Add `-- --ai` to evaluate the configured AI model. |
 | `npm run eval:labels -- --photos DIR` | Vision model over the private label set ([evals/labels/README.md](evals/labels/README.md)) |
 | `npm run check` | Everything CI runs except the end-to-end tests |
@@ -62,8 +62,9 @@ All settings are server-side except `VITE_TURNSTILE_SITE_KEY`. See [.env.example
 ```
 src/domain/      Brewing rules, schemas, recipe engine, validator, dial-in advice (shared by app, API, evals)
 src/data/        IndexedDB (Dexie) schema, repositories, legacy migration, export/import
-src/lib/         Client glue: API client, Turnstile, image pipeline, form and journal view models
-src/components/  Current screens (React). Rewritten in R1.
+src/lib/         Client glue: API client, Turnstile, image pipeline, form, display and journal helpers
+src/ui/          The BrewMap design system in code: tokens (generated), component styles and components
+src/app/         App shell, hash routes, and one file per screen in src/app/screens
 api/scan.ts      POST /api/scan    — read a label photo (AI-01)
 api/recipe.ts    POST /api/recipe  — personalise a recipe within bounds (AI-02)
 api/_lib/        Protection, AI gateway, provider registry, prompts, routes

@@ -13,3 +13,4 @@ Each record states one decision, why it was taken and what it costs. A record is
 | [ADR-07](ADR-07-hong-kong-region.md) | API functions in the Vercel Hong Kong region (`hkg1`) | Accepted, to confirm on the plan | R0 |
 | [ADR-08](ADR-08-test-stack.md) | Vitest, fast-check, Playwright and an eval harness | Accepted | R0 |
 | [ADR-09](ADR-09-model-selection.md) | Model selection per capability | **Proposed: awaiting the bake-off** | — |
+| [ADR-10](ADR-10-app-shell.md) | Hash routing, the design system in code, and logic-free screens | Accepted | R1 |

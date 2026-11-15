@@ -2,6 +2,35 @@
 
 All notable changes. Versions follow [Semantic Versioning](https://semver.org/).
 
+## [0.3.0] — 2026-11-15 · The redesigned key journey (R1, first cut)
+
+Built from the UX design note v0.1 and the BrewMap design system, on top of R0.
+
+### Added
+- **New screens**, in BrewMap's own design system (Manrope, neutral paper, one water-blue data colour, dark brew mode): Today, Scan a bag, Check the label, V60 recipe, Guided brew, Taste, the bag page, Beans, Journal and Map, with a four-tab bottom navigation.
+- **Today** answers "what should I brew this morning?": the bag at its best, with its next recipe (journeys J1, J2).
+- **Check the label** edits every field, flags unsure ones with the reason and a "That's right" confirmation, offers bag weight presets, and doubles as manual entry and bag editing (CAP-03, CAP-04, CAP-06, CAP-08, LOG-05).
+- **Recipe** with a dose stepper that recalculates the whole recipe, the pour chart, steps with cumulative targets, and why (RCP-03, RCP-07). Labelled "Standard recipe" when AI is not used (RCP-06).
+- **Guided brew**: measured timer (no drift), what to pour to and by when, pause, resume, skip, restart, screen wake lock with a fallback notice, sound and vibration cues that can be turned off, then Taste with the actual time (BRW-01 to BRW-07).
+- **Taste** in one screen: rating, sour–bitter and weak–strong scales, flavour chips, grind setting, notes, and a live "Next time" change (LOG-01 to LOG-03, DIAL-01, DIAL-02). Manual log without the timer (LOG-04) and brew editing.
+- **Bag page**: next brew with the one change marked, dialling-in history with whether each change helped, freshness window, what is left in the bag with a finish prompt, label facts, edit and delete (BEAN-02 to BEAN-04, DIAL-03 to DIAL-05).
+- **Beans** library with status filter, search and sorting (BEAN-05). **Journal** list and calendar, search, rating filter, export (JSON, CSV) and import (JRN-01, JRN-02, JRN-04). **Map** from bags, with an origins list (MAP-01, MAP-02).
+- Delete with confirmation and a 10-second Undo for bags and brews (LOG-05).
+- Domain: freshness windows by roast level, the guided-brew timeline, next-brew planning from a bag's history, dial-in outcome tracking, bag statistics, a first flavour lexicon. The dial-in coach now keeps every change inside the V60 range.
+- Data: schema v2 (brew time, the suggestion shown, and the brew it was applied from) with an upgrade for existing data. A bag is saved before its first brew; deleting a brew keeps the bag and returns the dose.
+- ADR-10 (app shell).
+
+### Changed
+- The flow no longer ends at a recipe: recipe → brew → taste → next brew. The old "Customize" taste step is gone until preferences move to the profile (PRF-02).
+
+### Removed
+- The prototype screens (`src/components`, `App.jsx`) and their styles.
+
+### Known gaps
+- Not built yet: onboarding and profile (PRF-01 to PRF-03, PRF-05), units, the installable app (ADR-05), the full flavour lexicon (AI-05), the strings catalogue (NFR-13), house recipes (RCP-08), offline scan queue.
+- Design proposals still waiting for the Product Owner (UX design §5): UX-1 grinder estimates (the app only uses clicks the user types), UX-2, UX-3 expected scale reading (not shown), UX-4 freshness windows (placeholders), UX-5 navigation.
+- Production AI stays off until Turnstile and Upstash are configured (ADR-06); the app then works with manual entry and standard recipes.
+
 ## [0.2.0] — 2026-10-27 · Release R0 (Foundation)
 
 Built against BRD v0.3 and Solution Plan v0.2. Epics E0.1–E0.6.
