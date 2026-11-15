@@ -51,7 +51,7 @@ export interface CountryPin {
 }
 
 /** One pin per origin country, one line per bag (MAP-01). */
-export function pinsByCountry(entries: JournalEntry[]): { pins: CountryPin[]; unmapped: string[] } {
+export function pinsByCountry(entries: Array<Pick<JournalEntry, 'bean'>>): { pins: CountryPin[]; unmapped: string[] } {
   const pins = new Map<string, CountryPin>()
   const seenBeans = new Set<string>()
   const unmapped = new Set<string>()

@@ -2,7 +2,7 @@
 // (JRN-05), ask the browser to keep our data, and check storage (DR-05).
 
 import { migrateLegacy, legacyBackup } from '../data/legacy-import.js'
-import { exportAll } from '../data/export.js'
+import { brewsCsv, exportAll } from '../data/export.js'
 import { estimateUsage, requestPersistence } from '../data/storage.js'
 
 export interface StartupReport {
@@ -60,4 +60,8 @@ export async function downloadLegacyBackup(): Promise<boolean> {
 export async function downloadExport(): Promise<void> {
   const data = await exportAll({ includePhotos: false })
   download(`brewmap-journal-${new Date().toISOString().slice(0, 10)}.json`, JSON.stringify(data, null, 2))
+}
+
+export async function downloadCsv(): Promise<void> {
+  download(`brewmap-brews-${new Date().toISOString().slice(0, 10)}.csv`, await brewsCsv(), 'text/csv')
 }

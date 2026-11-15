@@ -5,7 +5,7 @@ import { PROCESSES, ROAST_LEVELS, type Process, type RoastLevel } from '../domai
 import { countryByCode, normaliseCountry } from '../domain/normalise/country.js'
 import { parseAltitude, splitNotes, splitVarieties } from '../domain/normalise/text.js'
 import { isPlausibleRoastDate } from '../domain/normalise/date.js'
-import type { BeanAttributes } from '../domain/schemas.js'
+import type { Bean, BeanAttributes } from '../domain/schemas.js'
 import type { ScanField, ScanResult } from '../domain/scan.js'
 import type { BeanDraft } from '../data/repositories.js'
 
@@ -136,4 +136,34 @@ export function beanDraftFromForm(form: BeanForm, scan: ScanResult | null, today
         }
       : null,
   }
+}
+
+/** The form filled from a saved bag, to edit it (LOG-05). */
+export function formFromBean(bean: Bean): BeanForm {
+  return {
+    name: bean.name,
+    roaster: bean.roaster ?? '',
+    originCountry: bean.originCountry ?? '',
+    region: bean.region ?? '',
+    producer: bean.producer ?? '',
+    process: bean.process ?? '',
+    roastLevel: bean.roastLevel ?? '',
+    roastDate: bean.roastDate ?? '',
+    varieties: bean.varieties.join(', '),
+    altitude: bean.altitude ? (bean.altitude.minM === bean.altitude.maxM ? `${bean.altitude.minM} m` : `${bean.altitude.minM}–${bean.altitude.maxM} m`) : '',
+    labelNotes: bean.labelNotes.join(', '),
+    netWeightG: bean.netWeightG ? String(bean.netWeightG) : '',
+  }
+}
+
+/** Changes to a saved bag from the edit form. A new bag weight resets what is left in proportion. */
+export function beanPatchFromForm(form: BeanForm, bean: Bean, today = new Date()): Partial<Bean> {
+  const draft = beanDraftFromForm(form, null, today)
+  let remainingG = bean.remainingG
+  if (draft.netWeightG !== bean.netWeightG) {
+    const used = bean.netWeightG !== null && bean.remainingG !== null ? bean.netWeightG - bean.remainingG : 0
+    remainingG = draft.netWeightG == null ? null : Math.max(0, draft.netWeightG - used)
+  }
+  const { source: _s, extraction: _e, originRaw, ...rest } = draft
+  return { ...rest, originRaw: originRaw ?? bean.originRaw, remainingG }
 }

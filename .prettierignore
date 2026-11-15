@@ -4,8 +4,5 @@ playwright-report
 test-results
 package-lock.json
 docs
-src/components
-src/App.jsx
-src/main.jsx
 *.css
 *.md

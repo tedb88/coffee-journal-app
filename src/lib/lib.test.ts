@@ -191,6 +191,9 @@ describe('journal read models', () => {
         descriptors: [],
         notes: '',
         grindSetting: null,
+        actualTimeS: null,
+        advice: null,
+        appliedFrom: null,
         legacyId: null,
       },
     }
@@ -264,5 +267,100 @@ describe('startUp (JRN-05)', () => {
     expect(list).toHaveLength(1)
     expect(list[0].bean).toMatchObject({ name: 'Old Kenya', originCountry: 'KE', source: 'legacy' })
     useDb(null)
+  })
+})
+
+describe('display helpers', async () => {
+  const { beanMeta, beanByline, remaining, recipeLine, whenText, parseMinutes, fullDate, freshnessStatus } = await import('./display.js')
+  const bean = { originCountry: 'ET', originRaw: null, process: 'washed', roastLevel: 'light', roaster: 'Fernleaf Roasters', region: 'Guji' } as const
+  const recipe = baselineRecipe({ bean: { originCountry: 'ET', process: 'washed', roastLevel: 'light', roastDate: null }, doseG: 15, today: TODAY })
+
+  it('describes a bag in plain words', () => {
+    expect(beanMeta(bean)).toBe('Ethiopia · Washed · Light')
+    expect(beanByline(bean)).toBe('Fernleaf Roasters · Ethiopia, Guji')
+    expect(beanMeta({ originCountry: null, originRaw: 'Atlantis', process: null, roastLevel: null })).toBe('Atlantis')
+    expect(freshnessStatus({ roastDate: '2026-10-11', roastLevel: 'light' }, TODAY)).toMatchObject({ tone: 'positive', text: 'At its best · day 9' })
+    expect(freshnessStatus({ roastDate: null, roastLevel: 'light' }, TODAY)).toBeNull()
+  })
+
+  it('says how much is left', () => {
+    expect(remaining({ remainingG: 65, netWeightG: 250 }, 15, 3)).toEqual({ amount: '65 g', note: 'about 4 brews' })
+    expect(remaining({ remainingG: 200, netWeightG: 200 }, 15, 0)).toEqual({ amount: '200 g', note: 'new' })
+    expect(remaining({ remainingG: 10, netWeightG: 200 }, 15, 9).note).toBe('nearly empty')
+    expect(remaining({ remainingG: null, netWeightG: null }, 15, 2)).toEqual({ amount: '—', note: '2 brews' })
+  })
+
+  it('summarises recipes, dates and times', () => {
+    expect(recipeLine(recipe)).toMatch(/^15 g · \d+ g · \d+ °C · Medium-fine · \d:\d\d$/)
+    expect(recipeLine(recipe, 22, 200)).toMatch(/22 clicks · 3:20$/)
+    expect(recipeLine({ ...recipe, source: 'legacy', legacyGuide: { coffeeAmount: '15g', waterAmount: '240ml', waterTemp: '93°C', totalTime: '3:10' } })).toBe(
+      '15g · 240ml · 93°C · 3:10',
+    )
+    const now = new Date(2026, 9, 23, 9, 0)
+    expect(whenText(new Date(2026, 9, 23, 7, 58).toISOString(), now)).toBe('Today, 07:58')
+    expect(whenText(new Date(2026, 9, 22, 18, 2).toISOString(), now)).toBe('Yesterday, 18:02')
+    expect(whenText(new Date(2026, 9, 20, 7, 40).toISOString(), now)).toMatch(/^Tue 20 Oct, 07:40$/)
+    expect(fullDate('2026-10-14')).toBe('14 Oct 2026')
+    expect(parseMinutes('3:10')).toBe(190)
+    expect(parseMinutes('190')).toBe(190)
+    expect(parseMinutes('3:75')).toBeNull()
+    expect(parseMinutes('soon')).toBeNull()
+  })
+})
+
+describe('Today picks the bag to brew', async () => {
+  const { pickNextBean, onShelf } = await import('./today.js')
+  const mk = (id: string, over: Record<string, unknown> = {}) =>
+    ({
+      id,
+      name: id,
+      status: 'active',
+      remainingG: 100,
+      roastDate: null,
+      roastLevel: 'light',
+      createdAt: '2026-10-01T00:00:00.000Z',
+      ...over,
+    }) as unknown as JournalEntry['bean']
+  const brewOf = (beanId: string, createdAt: string) => ({ beanId, createdAt }) as unknown as JournalEntry['brew']
+
+  it('prefers a bag at its best, then the one brewed most recently', () => {
+    const peak = mk('peak', { roastDate: '2026-10-13' })
+    const resting = mk('resting', { roastDate: '2026-10-21' })
+    const plain = mk('plain')
+    expect(pickNextBean([resting, plain, peak], [], TODAY)?.id).toBe('peak')
+    expect(pickNextBean([resting, plain], [], TODAY)?.id).toBe('plain')
+    const a = mk('a')
+    const b = mk('b')
+    expect(pickNextBean([a, b], [brewOf('a', '2026-10-20T07:00:00.000Z'), brewOf('b', '2026-10-22T07:00:00.000Z')], TODAY)?.id).toBe('b')
+  })
+
+  it('leaves finished and empty bags off the shelf', () => {
+    const list = [mk('done', { status: 'finished' }), mk('empty', { remainingG: 0 }), mk('unknown', { remainingG: null })]
+    expect(onShelf(list).map((b) => b.id)).toEqual(['unknown'])
+    expect(pickNextBean([mk('done', { status: 'finished' })], [], TODAY)).toBeNull()
+  })
+})
+
+describe('editing a saved bag (LOG-05)', async () => {
+  const { formFromBean, beanPatchFromForm } = await import('./beanForm.js')
+  const saved = {
+    ...beanDraftFromForm(formFromScan(SCAN), SCAN, TODAY),
+    id: 'x',
+    createdAt: TODAY.toISOString(),
+    updatedAt: TODAY.toISOString(),
+    photoIds: [],
+    status: 'active',
+    legacyId: null,
+    remainingG: 170,
+  } as unknown as JournalEntry['bean']
+
+  it('fills the form from the bag and keeps what was used when the weight changes', () => {
+    const form = formFromBean(saved)
+    expect(form).toMatchObject({ name: 'Guji Hambela', originCountry: 'ET', netWeightG: '200', altitude: '1900–2100 m' })
+    expect(beanPatchFromForm(form, saved, TODAY)).toMatchObject({ name: 'Guji Hambela', remainingG: 170 })
+    expect(beanPatchFromForm({ ...form, netWeightG: '250' }, saved, TODAY)).toMatchObject({ netWeightG: 250, remainingG: 220 })
+    const patch = beanPatchFromForm({ ...form, name: 'Guji Hambela Lot 2' }, saved, TODAY)
+    expect(patch).not.toHaveProperty('source')
+    expect(patch).not.toHaveProperty('extraction')
   })
 })
