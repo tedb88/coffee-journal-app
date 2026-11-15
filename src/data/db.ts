@@ -4,7 +4,7 @@
 import Dexie, { type Table } from 'dexie'
 import type { Bean, Brew } from '../domain/schemas.js'
 
-export const SCHEMA_VERSION = 1
+export const SCHEMA_VERSION = 2
 
 export interface PhotoRecord {
   id: string
@@ -34,6 +34,19 @@ export class BrewMapDB extends Dexie {
       photos: 'id, beanId',
       meta: 'key',
     })
+    // v2: brews record the actual time and the dial-in suggestion (BRW-07, DIAL-05).
+    this.version(2)
+      .stores({})
+      .upgrade((tx) =>
+        tx
+          .table('brews')
+          .toCollection()
+          .modify((b: Record<string, unknown>) => {
+            b.actualTimeS ??= null
+            b.advice ??= null
+            b.appliedFrom ??= null
+          }),
+      )
   }
 }
 

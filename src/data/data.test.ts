@@ -4,7 +4,23 @@ import { recipeFromParams } from '../domain/recipe/engine.js'
 import { BrewMapDB, guardQuota, newId, StorageFullError, useDb } from './db.js'
 import { brewsCsv, exportAll, importAll } from './export.js'
 import { BACKUP_META, dataUrlToPhoto, LEGACY_KEY, legacyBackup, legacyRecipe, migrateLegacy, readLegacy, type LegacyEntry } from './legacy-import.js'
-import { addBrew, createBean, deleteBrew, getBean, getPhoto, listBeans, listJournal, saveScannedBrew, updateBean } from './repositories.js'
+import {
+  addBrew,
+  createBean,
+  deleteBean,
+  deleteBrew,
+  getBean,
+  getBrew,
+  getPhoto,
+  listBeans,
+  listBrewsForBean,
+  listJournal,
+  restore,
+  saveBean,
+  updateBean,
+  updateBrew,
+  type BeanDraft,
+} from './repositories.js'
 import { estimateUsage, requestPersistence } from './storage.js'
 
 let db: BrewMapDB
@@ -20,9 +36,16 @@ afterEach(async () => {
 const recipe = recipeFromParams({ doseG: 15, ratio: 16, tempC: 94, grind: 'medium-fine', bloomS: 40, totalS: 190, pours: 3 }, { source: 'rules' })
 const photo = { bytes: new Uint8Array([1, 2, 3]).buffer, type: 'image/jpeg' }
 
+/** A scanned bag and its first brew, as the app saves them: bag first, brew after tasting. */
+async function scannedWithBrew(input: { bean: BeanDraft; recipe: typeof recipe; photo?: typeof photo }) {
+  const bean = await saveBean({ bean: input.bean, photo: input.photo ?? null })
+  const brew = await addBrew({ beanId: bean.id, recipe: input.recipe })
+  return { bean: (await getBean(bean.id))!, brew }
+}
+
 describe('repositories', () => {
   it('saves a scanned bag with its photo and first brew', async () => {
-    const { bean, brew } = await saveScannedBrew({
+    const { bean, brew } = await scannedWithBrew({
       bean: { source: 'scan', name: 'Hambela Alaka', originCountry: 'ET', netWeightG: 200, remainingG: 200 },
       recipe,
       photo,
@@ -49,15 +72,48 @@ describe('repositories', () => {
     await expect(addBrew({ beanId: 'missing', recipe })).rejects.toThrow(/No bean/)
   })
 
-  it('deletes a brew, and its bean only when no brews remain', async () => {
-    const { bean, brew } = await saveScannedBrew({ bean: { source: 'scan', name: 'Kirinyaga AA' }, recipe, photo })
+  it('saves a bag on its own, before any brew', async () => {
+    const bean = await saveBean({ bean: { source: 'manual', name: 'Kirinyaga AA', netWeightG: 250, remainingG: 250 } })
+    expect(bean.photoIds).toEqual([])
+    expect(await listBrewsForBean(bean.id)).toEqual([])
+    expect(await listJournal()).toEqual([]) // the journal lists brews, so a new bag is not in it yet
+  })
+
+  it('deletes a brew but keeps the bag, giving the dose back (LOG-05, DR-05)', async () => {
+    const { bean, brew } = await scannedWithBrew({ bean: { source: 'scan', name: 'Kirinyaga AA', netWeightG: 200, remainingG: 200 }, recipe, photo })
     const second = await addBrew({ beanId: bean.id, recipe })
+    expect((await getBean(bean.id))?.remainingG).toBe(170)
     await deleteBrew(brew.id)
-    expect(await getBean(bean.id)).toBeDefined()
-    await deleteBrew(second.id)
-    expect(await getBean(bean.id)).toBeUndefined()
-    expect(await db.photos.count()).toBe(0)
-    await deleteBrew('missing') // no-op
+    const snap = await deleteBrew(second.id)
+    expect(await getBean(bean.id)).toMatchObject({ remainingG: 200, photoIds: bean.photoIds })
+    expect(await db.photos.count()).toBe(1)
+    expect(await deleteBrew('missing')).toEqual({ beans: [], brews: [], photos: [] })
+
+    await restore(snap) // Undo
+    expect((await getBrew(second.id))?.id).toBe(second.id)
+    expect((await getBean(bean.id))?.remainingG).toBe(185)
+  })
+
+  it('deletes a bag with its brews and photos, and Undo brings them all back', async () => {
+    const { bean } = await scannedWithBrew({ bean: { source: 'scan', name: 'Hambela Alaka' }, recipe, photo })
+    await addBrew({ beanId: bean.id, recipe })
+    const snap = await deleteBean(bean.id)
+    expect(snap).toMatchObject({ beans: [{ id: bean.id }] })
+    expect(snap.brews).toHaveLength(2)
+    expect(snap.photos).toHaveLength(1)
+    expect(await db.beans.count()).toBe(0)
+    expect(await db.brews.count()).toBe(0)
+    await restore(snap)
+    expect(await listBrewsForBean(bean.id)).toHaveLength(2)
+    expect(await getPhoto(bean.photoIds[0])).toBeDefined()
+  })
+
+  it('edits a brew without touching its recipe snapshot (RCP-09)', async () => {
+    const { brew } = await scannedWithBrew({ bean: { source: 'manual', name: 'A' }, recipe })
+    const edited = await updateBrew(brew.id, { rating: 4, notes: 'Sweeter as it cooled', actualTimeS: 195 })
+    expect(edited).toMatchObject({ rating: 4, notes: 'Sweeter as it cooled', actualTimeS: 195, recipe: brew.recipe, createdAt: brew.createdAt })
+    await expect(updateBrew(brew.id, { rating: 9 })).rejects.toThrow()
+    await expect(updateBrew('missing', {})).rejects.toThrow(/No brew/)
   })
 })
 
@@ -199,7 +255,7 @@ describe('legacy migration (JRN-05)', () => {
 
 describe('export and import (JRN-04)', () => {
   it('round-trips beans, brews and photos without loss', async () => {
-    await saveScannedBrew({ bean: { source: 'scan', name: 'Hambela Alaka', originCountry: 'ET' }, recipe, photo })
+    await scannedWithBrew({ bean: { source: 'scan', name: 'Hambela Alaka', originCountry: 'ET' }, recipe, photo })
     const file = await exportAll({ includePhotos: true })
     expect(file.photos).toHaveLength(1)
     const json = JSON.parse(JSON.stringify(file))
@@ -222,7 +278,7 @@ describe('export and import (JRN-04)', () => {
   })
 
   it('writes brews as CSV', async () => {
-    const { bean } = await saveScannedBrew({
+    const { bean } = await scannedWithBrew({
       bean: { source: 'scan', name: 'Hambela, "Alaka"', originCountry: 'ET', process: 'washed', roastLevel: 'light' },
       recipe,
     })
@@ -259,5 +315,37 @@ describe('storage manager', () => {
         },
       }),
     ).toBeNull()
+  })
+})
+
+describe('schema v2 upgrade (DR-04)', () => {
+  it('fills the new brew fields on records saved by v1', async () => {
+    const name = `upgrade-${newId()}`
+    const { default: Dexie } = await import('dexie')
+    const v1 = new Dexie(name)
+    v1.version(1).stores({
+      beans: 'id, createdAt, originCountry, status, legacyId',
+      brews: 'id, beanId, createdAt, legacyId',
+      photos: 'id, beanId',
+      meta: 'key',
+    })
+    await v1.table('brews').add({
+      id: 'old',
+      beanId: 'b',
+      createdAt: '2026-10-01T08:00:00.000Z',
+      method: 'v60',
+      recipe,
+      guided: false,
+      rating: 3,
+      balance: null,
+      descriptors: [],
+      notes: '',
+      grindSetting: null,
+      legacyId: null,
+    })
+    v1.close()
+    const v2 = new BrewMapDB(name)
+    expect(await v2.brews.get('old')).toMatchObject({ actualTimeS: null, advice: null, appliedFrom: null, rating: 3 })
+    await v2.delete()
   })
 })
