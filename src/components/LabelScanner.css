@@ -830,3 +830,63 @@
   .confirm-actions .btn-secondary { text-align: center; justify-content: center; }
   .flavor-options { gap: 0.35rem; }
 }
+
+/* ===== Editable confirm fields (CAP-03, CAP-04, CAP-06) ===== */
+.confirm-field.edit { padding: 0.6rem 1.25rem; }
+.confirm-field.edit .confirm-field-body { width: 100%; gap: 0.3rem; }
+
+.field-input {
+  width: 100%;
+  min-height: 44px;
+  padding: 0.55rem 0.7rem;
+  border: 1.5px solid var(--card-border);
+  border-radius: var(--radius-sm);
+  font: inherit;
+  font-size: 1rem;
+  color: var(--text-primary);
+  background: white;
+}
+
+.field-input:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(220,38,38,0.12); }
+.field-input.flagged { border-color: #D97706; background: #FFFBEB; }
+
+.field-flag {
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: #92400E;
+}
+
+.btn-link {
+  margin-top: 0.75rem;
+  background: none;
+  border: none;
+  padding: 0.5rem;
+  min-height: 44px;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--blue);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.error-actions { margin-top: 0.75rem; display: flex; gap: 0.5rem; flex-wrap: wrap; }
+
+.save-error {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--danger);
+  margin-bottom: 0.2rem;
+}
+
+.recipe-source-note {
+  margin: 0 0 0.9rem;
+  padding: 0.6rem 0.8rem;
+  border-radius: var(--radius-sm);
+  background: var(--bg-subtle);
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.turnstile-slot { position: fixed; left: 50%; bottom: 1rem; transform: translateX(-50%); z-index: 50; }

@@ -1,80 +1,40 @@
 import { useEffect, useState, useRef } from 'react'
 import { IconGlobe, IconMapPin } from './Icons.jsx'
+import { listJournal } from '../data/repositories.ts'
+import { pinsByCountry } from '../lib/journal.ts'
 import './WorldMap.css'
 
-const STORAGE_KEY = 'brewmap_journal'
-
-const COUNTRY_COORDS = {
-  'Ethiopia':             [9.145,  40.489],
-  'Colombia':             [4.571,  -74.297],
-  'Brazil':               [-14.235, -51.925],
-  'Guatemala':            [15.783, -90.230],
-  'Honduras':             [15.200, -86.241],
-  'Mexico':               [23.634, -102.552],
-  'Kenya':                [-0.023,  37.906],
-  'Tanzania':             [-6.369,  34.888],
-  'Rwanda':               [-1.940,  29.874],
-  'Uganda':               [1.373,   32.290],
-  'Burundi':              [-3.373,  29.918],
-  'DR Congo':             [-4.038,  21.759],
-  'Democratic Republic of the Congo': [-4.038, 21.759],
-  'Congo':                [-4.038,  21.759],
-  'Yemen':                [15.552,  48.516],
-  'Indonesia':            [-0.789,  113.921],
-  'Vietnam':              [14.058,  108.277],
-  'Myanmar':              [16.871,  96.195],
-  'Thailand':             [15.870,  100.992],
-  'India':                [20.594,  78.963],
-  'Papua New Guinea':     [-6.314,  143.956],
-  'Philippines':          [12.879,  121.774],
-  'Jamaica':              [18.109,  -77.297],
-  'Haiti':                [18.971,  -72.285],
-  'Dominican Republic':   [18.735,  -70.162],
-  'Peru':                 [-9.190,  -75.015],
-  'Bolivia':              [-16.290, -63.589],
-  'Ecuador':              [-1.831,  -78.183],
-  'Panama':               [8.538,   -80.782],
-  'Costa Rica':           [9.748,   -83.753],
-  'El Salvador':          [13.794,  -88.896],
-  'Nicaragua':            [12.865,  -85.207],
-  'Cuba':                 [21.521,  -77.781],
-  'China':                [35.861,  104.195],
-  'Taiwan':               [23.698,  120.961],
-  'Laos':                 [19.856,  102.495],
-  'Timor-Leste':          [-8.874,  125.727],
-  'East Timor':           [-8.874,  125.727],
-  'Zimbabwe':             [-19.015,  29.154],
-  'Zambia':               [-13.133,  27.849],
-  'Malawi':               [-13.254,  34.301],
-  'Cameroon':             [3.848,   11.502],
-  'Nigeria':              [9.082,    8.675],
-  'Togo':                 [8.620,    0.825],
-  'Côte d\'Ivoire':       [7.540,   -5.547],
-  'Ivory Coast':          [7.540,   -5.547],
-  'Ghana':                [7.946,   -1.023],
-  'Nepal':                [28.394,  84.124],
-  'Sri Lanka':            [7.873,   80.772],
-  'Madagascar':           [-18.766, 46.869],
-  'Galapagos':            [-0.952,  -90.961],
-}
-
-function normalizeCountry(raw) {
-  if (!raw) return null
-  const trimmed = raw.trim()
-  for (const key of Object.keys(COUNTRY_COORDS)) {
-    if (key.toLowerCase() === trimmed.toLowerCase()) return key
+// MAP-02: popups are built from DOM nodes and text, never from HTML strings,
+// so names and notes from labels or users cannot inject markup.
+function popupContent(pin) {
+  const root = document.createElement('div')
+  root.className = 'map-popup'
+  const title = document.createElement('div')
+  title.className = 'map-popup-country'
+  title.textContent = pin.country.name
+  const list = document.createElement('ul')
+  list.className = 'map-popup-list'
+  for (const c of pin.coffees) {
+    const li = document.createElement('li')
+    const name = document.createElement('strong')
+    name.textContent = c.name
+    li.append(name)
+    if (c.roastLevel) {
+      const chip = document.createElement('span')
+      chip.className = 'map-popup-chip'
+      chip.textContent = c.roastLevel
+      li.append(' ', chip)
+    }
+    if (c.notes.length) {
+      const notes = document.createElement('div')
+      notes.className = 'map-popup-notes'
+      notes.textContent = c.notes.join(' · ')
+      li.append(notes)
+    }
+    list.append(li)
   }
-  for (const key of Object.keys(COUNTRY_COORDS)) {
-    if (
-      trimmed.toLowerCase().startsWith(key.toLowerCase()) ||
-      key.toLowerCase().startsWith(trimmed.toLowerCase())
-    ) return key
-  }
-  return null
-}
-
-function loadJournal() {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]') } catch { return [] }
+  root.append(title, list)
+  return root
 }
 
 export default function WorldMap({ journalVersion }) {
@@ -83,8 +43,18 @@ export default function WorldMap({ journalVersion }) {
   const markersRef = useRef([])
   const [unmapped, setUnmapped]   = useState([])
   const [totalPins, setTotalPins] = useState(0)
+  const [entries, setEntries]     = useState(null)
 
   useEffect(() => {
+    let live = true
+    listJournal().then(list => { if (live) setEntries(list) }).catch(() => { if (live) setEntries([]) })
+    return () => { live = false }
+  }, [journalVersion])
+
+  const hasEntries = entries !== null && entries.length > 0
+
+  useEffect(() => {
+    if (!hasEntries) return
     let isMounted = true
 
     async function init() {
@@ -114,35 +84,27 @@ export default function WorldMap({ journalVersion }) {
     }
 
     init()
-    return () => { isMounted = false }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+    return () => {
+      isMounted = false
+      leafletRef.current?.map.remove()
+      leafletRef.current = null
+      markersRef.current = []
+    }
+  }, [hasEntries]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (leafletRef.current) renderMarkers()
-  }, [journalVersion]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [entries]) // eslint-disable-line react-hooks/exhaustive-deps
 
   function renderMarkers() {
     const { L, map } = leafletRef.current
-    const entries = loadJournal()
+    const { pins, unmapped: missed } = pinsByCountry(entries ?? [])
 
     markersRef.current.forEach(m => m.remove())
     markersRef.current = []
 
-    const byCountry = {}
-    const missed = []
-
-    for (const entry of entries) {
-      const key = normalizeCountry(entry.origin)
-      if (key) {
-        if (!byCountry[key]) byCountry[key] = []
-        byCountry[key].push(entry)
-      } else if (entry.origin) {
-        missed.push(entry.origin)
-      }
-    }
-
-    setUnmapped([...new Set(missed)])
-    setTotalPins(Object.keys(byCountry).length)
+    setUnmapped(missed)
+    setTotalPins(pins.length)
 
     const coffeeIcon = L.divIcon({
       className: '',
@@ -152,30 +114,12 @@ export default function WorldMap({ journalVersion }) {
       popupAnchor: [0, -12],
     })
 
-    for (const [country, coffees] of Object.entries(byCountry)) {
-      const [lat, lng] = COUNTRY_COORDS[country]
-      const marker = L.marker([lat, lng], { icon: coffeeIcon }).addTo(map)
-
-      const popupHtml = `
-        <div class="map-popup">
-          <div class="map-popup-country">${country}</div>
-          <ul class="map-popup-list">
-            ${coffees.map(c => `
-              <li>
-                <strong>${c.name || 'Unknown'}</strong>
-                ${c.roastLevel ? `<span class="map-popup-chip">${c.roastLevel}</span>` : ''}
-                ${c.tastingNotes?.length ? `<div class="map-popup-notes">${c.tastingNotes.join(' · ')}</div>` : ''}
-              </li>
-            `).join('')}
-          </ul>
-        </div>
-      `
-      marker.bindPopup(popupHtml, { maxWidth: 260 })
+    for (const pin of pins) {
+      const marker = L.marker([pin.country.lat, pin.country.lng], { icon: coffeeIcon, title: pin.country.name }).addTo(map)
+      marker.bindPopup(() => popupContent(pin), { maxWidth: 260 })
       markersRef.current.push(marker)
     }
   }
-
-  const entries = loadJournal()
 
   return (
     <section className="map-section">
@@ -187,7 +131,7 @@ export default function WorldMap({ journalVersion }) {
         )}
       </h2>
 
-      {entries.length === 0 ? (
+      {entries === null ? null : !hasEntries ? (
         <div className="card map-empty">
           <div className="map-empty-icon"><IconMapPin size={36} /></div>
           <p>No coffees in your journal yet.</p>
@@ -201,7 +145,7 @@ export default function WorldMap({ journalVersion }) {
           {unmapped.length > 0 && (
             <div className="map-unmapped">
               <strong>Could not map:</strong> {unmapped.join(', ')}
-              <span className="map-unmapped-hint"> (origin not in the built-in coordinates list)</span>
+              <span className="map-unmapped-hint"> (origin country not recognised)</span>
             </div>
           )}
         </>

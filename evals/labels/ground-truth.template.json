@@ -1,0 +1,23 @@
+[
+  {
+    "id": "L001",
+    "file": "L001.jpg",
+    "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "language": "zh-Hant",
+    "conditions": ["glare", "curved"],
+    "truth": {
+      "name": "Guji Hambela",
+      "roaster": "Example Roasters",
+      "originCountry": "ET",
+      "region": "Guji",
+      "producer": null,
+      "varieties": ["74110", "74112"],
+      "process": "washed",
+      "roastLevel": "light",
+      "altitude": { "minM": 1900, "maxM": 2200 },
+      "labelNotes": ["jasmine", "peach"],
+      "roastDate": "2026-10-14",
+      "netWeightG": 200
+    }
+  }
+]

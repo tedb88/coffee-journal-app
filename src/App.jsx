@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import './App.css'
+import { downloadExport, downloadLegacyBackup, startUp } from './lib/startup.ts'
 import LabelScanner from './components/LabelScanner.jsx'
 import BrewJournal from './components/BrewJournal.jsx'
 import WorldMap from './components/WorldMap.jsx'
@@ -14,6 +15,17 @@ const TABS = [
 export default function App() {
   const [activeTab, setActiveTab] = useState('scanner')
   const [journalVersion, setJournalVersion] = useState(0)
+  const [startup, setStartup] = useState(null)
+
+  useEffect(() => {
+    let live = true
+    startUp().then(report => {
+      if (!live) return
+      setStartup(report)
+      if (report.migrated > 0) setJournalVersion(v => v + 1)
+    })
+    return () => { live = false }
+  }, [])
 
   function onBrewSaved() { setJournalVersion(v => v + 1) }
 
@@ -129,11 +141,41 @@ export default function App() {
         </nav>
       </header>
 
+      <StartupNotice report={startup} onDismiss={() => setStartup(null)} />
+
       <main className="app-main">
-        {activeTab === 'scanner' && <LabelScanner onBrewSaved={onBrewSaved} />}
+        {/* The scanner stays mounted so switching tabs keeps the photo and progress. */}
+        <div hidden={activeTab !== 'scanner'}><LabelScanner onBrewSaved={onBrewSaved} /></div>
         {activeTab === 'journal' && <BrewJournal journalVersion={journalVersion} onDelete={() => setJournalVersion(v => v + 1)} />}
         {activeTab === 'map'     && <WorldMap journalVersion={journalVersion} />}
       </main>
     </div>
   )
+}
+
+function StartupNotice({ report, onDismiss }) {
+  if (!report) return null
+  if (report.failed > 0 || report.storageFull) {
+    return (
+      <div className="app-notice" role="status">
+        <span>
+          {report.storageFull
+            ? 'Your phone is out of space, so some of your earlier journal could not be moved to the new format. Nothing was deleted.'
+            : 'Some earlier journal entries could not be moved to the new format. They are kept in a backup on this device.'}
+        </span>
+        <button onClick={() => downloadLegacyBackup()}>Download backup</button>
+        <button onClick={onDismiss}>Dismiss</button>
+      </div>
+    )
+  }
+  if (report.nearlyFull) {
+    return (
+      <div className="app-notice" role="status">
+        <span>Storage on this device is nearly full. Export your journal to keep a copy.</span>
+        <button onClick={() => downloadExport()}>Export journal</button>
+        <button onClick={onDismiss}>Dismiss</button>
+      </div>
+    )
+  }
+  return null
 }

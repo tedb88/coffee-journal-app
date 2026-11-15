@@ -1,0 +1,2149 @@
+{
+  "version": "golden-2026.10.1",
+  "status": "draft",
+  "reviewer": null,
+  "today": "2026-10-20",
+  "note": "Acceptable ranges, not single answers (Solution Plan §6.1). Drafted from general V60 guidance, independently of the rules engine tables; expert review is pending (BRD D9). Grind ranges are [finest, coarsest] on the five-step descriptor scale.",
+  "cases": [
+    {
+      "id": "R01",
+      "description": "ET · washed · light · 15 g · 10 days off roast",
+      "input": {
+        "bean": {
+          "originCountry": "ET",
+          "process": "washed",
+          "roastLevel": "light",
+          "roastDate": "2026-10-10"
+        },
+        "doseG": 15,
+        "preferences": null
+      },
+      "expect": {
+        "tempC": [
+          92,
+          96
+        ],
+        "ratio": [
+          15,
+          17
+        ],
+        "grind": [
+          "medium-fine",
+          "medium"
+        ],
+        "totalTimeS": [
+          165,
+          240
+        ],
+        "bloomS": [
+          30,
+          50
+        ],
+        "pours": [
+          2,
+          4
+        ]
+      }
+    },
+    {
+      "id": "R02",
+      "description": "ET · washed · light · 15 g · taste floral · 3 days off roast",
+      "input": {
+        "bean": {
+          "originCountry": "ET",
+          "process": "washed",
+          "roastLevel": "light",
+          "roastDate": "2026-10-17"
+        },
+        "doseG": 15,
+        "preferences": {
+          "taste": "floral",
+          "body": null,
+          "acidity": null
+        }
+      },
+      "expect": {
+        "tempC": [
+          92,
+          96
+        ],
+        "ratio": [
+          15,
+          17
+        ],
+        "grind": [
+          "medium-fine",
+          "medium"
+        ],
+        "totalTimeS": [
+          165,
+          240
+        ],
+        "bloomS": [
+          35,
+          50
+        ],
+        "pours": [
+          3,
+          5
+        ]
+      }
+    },
+    {
+      "id": "R03",
+      "description": "ET · natural · light · 15 g · taste fruity · 14 days off roast",
+      "input": {
+        "bean": {
+          "originCountry": "ET",
+          "process": "natural",
+          "roastLevel": "light",
+          "roastDate": "2026-10-06"
+        },
+        "doseG": 15,
+        "preferences": {
+          "taste": "fruity",
+          "body": null,
+          "acidity": null
+        }
+      },
+      "expect": {
+        "tempC": [
+          91,
+          96
+        ],
+        "ratio": [
+          15,
+          17
+        ],
+        "grind": [
+          "medium-fine",
+          "medium-coarse"
+        ],
+        "totalTimeS": [
+          165,
+          240
+        ],
+        "bloomS": [
+          30,
+          50
+        ],
+        "pours": [
+          3,
+          5
+        ]
+      }
+    },
+    {
+      "id": "R04",
+      "description": "ET · natural · medium-light · 18 g · taste fruity, body strong · 21 days off roast",
+      "input": {
+        "bean": {
+          "originCountry": "ET",
+          "process": "natural",
+          "roastLevel": "medium-light",
+          "roastDate": "2026-09-29"
+        },
+        "doseG": 18,
+        "preferences": {
+          "taste": "fruity",
+          "body": "strong",
+          "acidity": null
+        }
+      },
+      "expect": {
+        "tempC": [
+          90,
+          96
+        ],
+        "ratio": [
+          14,
+          17
+        ],
+        "grind": [
+          "medium-fine",
+          "medium-coarse"
+        ],
+        "totalTimeS": [
+          155,
+          235
+        ],
+        "bloomS": [
+          30,
+          50
+        ],
+        "pours": [
+          3,
+          5
+        ]
+      }
+    },
+    {
+      "id": "R05",
+      "description": "ET · anaerobic · light · 15 g · acidity bright · 9 days off roast",
+      "input": {
+        "bean": {
+          "originCountry": "ET",
+          "process": "anaerobic",
+          "roastLevel": "light",
+          "roastDate": "2026-10-11"
+        },
+        "doseG": 15,
+        "preferences": {
+          "taste": null,
+          "body": null,
+          "acidity": "bright"
+        }
+      },
+      "expect": {
+        "tempC": [
+          91,
+          96
+        ],
+        "ratio": [
+          15,
+          17
+        ],
+        "grind": [
+          "medium-fine",
+          "medium-coarse"
+        ],
+        "totalTimeS": [
+          165,
+          240
+        ],
+        "bloomS": [
+          30,
+          50
+        ],
+        "pours": [
+          2,
+          4
+        ]
+      }
+    },
+    {
+      "id": "R06",
+      "description": "KE · washed · light · 15 g · 12 days off roast",
+      "input": {
+        "bean": {
+          "originCountry": "KE",
+          "process": "washed",
+          "roastLevel": "light",
+          "roastDate": "2026-10-08"
+        },
+        "doseG": 15,
+        "preferences": null
+      },
+      "expect": {
+        "tempC": [
+          92,
+          96
+        ],
+        "ratio": [
+          15,
+          17
+        ],
+        "grind": [
+          "medium-fine",
+          "medium"
+        ],
+        "totalTimeS": [
+          165,
+          240
+        ],
+        "bloomS": [
+          30,
+          50
+        ],
+        "pours": [
+          2,
+          4
+        ]
+      }
+    },
+    {
+      "id": "R07",
+      "description": "KE · washed · medium-light · 15 g · acidity bright · 20 days off roast",
+      "input": {
+        "bean": {
+          "originCountry": "KE",
+          "process": "washed",
+          "roastLevel": "medium-light",
+          "roastDate": "2026-09-30"
+        },
+        "doseG": 15,
+        "preferences": {
+          "taste": null,
+          "body": null,
+          "acidity": "bright"
+        }
+      },
+      "expect": {
+        "tempC": [
+          91,
+          96
+        ],
+        "ratio": [
+          15,
+          17
+        ],
+        "grind": [
+          "medium-fine",
+          "medium"
+        ],
+        "totalTimeS": [
+          155,
+          235
+        ],
+        "bloomS": [
+          30,
+          50
+        ],
+        "pours": [
+          2,
+          4
+        ]
+      }
+    },
+    {
+      "id": "R08",
+      "description": "KE · washed · medium · 25 g · body medium · 30 days off roast",
+      "input": {
+        "bean": {
+          "originCountry": "KE",
+          "process": "washed",
+          "roastLevel": "medium",
+          "roastDate": "2026-09-20"
+        },
+        "doseG": 25,
+        "preferences": {
+          "taste": null,
+          "body": "medium",
+          "acidity": null
+        }
+      },
+      "expect": {
+        "tempC": [
+          89,
+          94
+        ],
+        "ratio": [
+          14,
+          17
+        ],
+        "grind": [
+          "medium-fine",
+          "medium-coarse"
+        ],
+        "totalTimeS": [
+          150,
+          240
+        ],
+        "bloomS": [
+          30,
+          50
+        ],
+        "pours": [
+          2,
+          4
+        ]
+      }
+    },
+    {
+      "id": "R09",
+      "description": "KE · natural · light · 12 g · taste fruity, body light · 5 days off roast",
+      "input": {
+        "bean": {
+          "originCountry": "KE",
+          "process": "natural",
+          "roastLevel": "light",
+          "roastDate": "2026-10-15"
+        },
+        "doseG": 12,
+        "preferences": {
+          "taste": "fruity",
+          "body": "light",
+          "acidity": null
+        }
+      },
+      "expect": {
+        "tempC": [
+          91,
+          96
+        ],
+        "ratio": [
+          15,
+          18
+        ],
+        "grind": [
+          "medium-fine",
+          "medium-coarse"
+        ],
+        "totalTimeS": [
+          165,
+          240
+        ],
+        "bloomS": [
+          35,
+          50
+        ],
+        "pours": [
+          3,
+          5
+        ]
+      }
+    },
+    {
+      "id": "R10",
+      "description": "CO · washed · medium · 15 g · 15 days off roast",
+      "input": {
+        "bean": {
+          "originCountry": "CO",
+          "process": "washed",
+          "roastLevel": "medium",
+          "roastDate": "2026-10-05"
+        },
+        "doseG": 15,
+        "preferences": null
+      },
+      "expect": {
+        "tempC": [
+          89,
+          94
+        ],
+        "ratio": [
+          14,
+          17
+        ],
+        "grind": [
+          "medium-fine",
+          "medium-coarse"
+        ],
+        "totalTimeS": [
+          150,
+          225
+        ],
+        "bloomS": [
+          30,
+          50
+        ],
+        "pours": [
+          2,
+          4
+        ]
+      }
+    },
+    {
+      "id": "R11",
+      "description": "CO · washed · medium · 15 g · taste balanced · 25 days off roast",
+      "input": {
+        "bean": {
+          "originCountry": "CO",
+          "process": "washed",
+          "roastLevel": "medium",
+          "roastDate": "2026-09-25"
+        },
+        "doseG": 15,
+        "preferences": {
+          "taste": "balanced",
+          "body": null,
+          "acidity": null
+        }
+      },
+      "expect": {
+        "tempC": [
+          89,
+          94
+        ],
+        "ratio": [
+          14,
+          17
+        ],
+        "grind": [
+          "medium-fine",
+          "medium-coarse"
+        ],
+        "totalTimeS": [
+          150,
+          225
+        ],
+        "bloomS": [
+          30,
+          50
+        ],
+        "pours": [
+          2,
+          4
+        ]
+      }
+    },
+    {
+      "id": "R12",
+      "description": "CO · honey · medium-light · 15 g · taste fruity · 11 days off roast",
+      "input": {
+        "bean": {
+          "originCountry": "CO",
+          "process": "honey",
+          "roastLevel": "medium-light",
+          "roastDate": "2026-10-09"
+        },
+        "doseG": 15,
+        "preferences": {
+          "taste": "fruity",
+          "body": null,
+          "acidity": null
+        }
+      },
+      "expect": {
+        "tempC": [
+          90,
+          96
+        ],
+        "ratio": [
+          15,
+          17
+        ],
+        "grind": [
+          "medium-fine",
+          "medium"
+        ],
+        "totalTimeS": [
+          155,
+          235
+        ],
+        "bloomS": [
+          30,
+          50
+        ],
+        "pours": [
+          3,
+          5
+        ]
+      }
+    },
+    {
+      "id": "R13",
+      "description": "CO · anaerobic · light · 15 g · taste fruity, acidity bright · 8 days off roast",
+      "input": {
+        "bean": {
+          "originCountry": "CO",
+          "process": "anaerobic",
+          "roastLevel": "light",
+          "roastDate": "2026-10-12"
+        },
+        "doseG": 15,
+        "preferences": {
+          "taste": "fruity",
+          "body": null,
+          "acidity": "bright"
+        }
+      },
+      "expect": {
+        "tempC": [
+          91,
+          96
+        ],
+        "ratio": [
+          15,
+          17
+        ],
+        "grind": [
+          "medium-fine",
+          "medium-coarse"
+        ],
+        "totalTimeS": [
+          165,
+          240
+        ],
+        "bloomS": [
+          30,
+          50
+        ],
+        "pours": [
+          3,
+          5
+        ]
+      }
+    },
+    {
+      "id": "R14",
+      "description": "CO · natural · medium · 18 g · body strong · 40 days off roast",
+      "input": {
+        "bean": {
+          "originCountry": "CO",
+          "process": "natural",
+          "roastLevel": "medium",
+          "roastDate": "2026-09-10"
+        },
+        "doseG": 18,
+        "preferences": {
+          "taste": null,
+          "body": "strong",
+          "acidity": null
+        }
+      },
+      "expect": {
+        "tempC": [
+          88,
+          94
+        ],
+        "ratio": [
+          13,
+          17
+        ],
+        "grind": [
+          "medium-fine",
+          "medium-coarse"
+        ],
+        "totalTimeS": [
+          150,
+          225
+        ],
+        "bloomS": [
+          30,
+          50
+        ],
+        "pours": [
+          2,
+          4
+        ]
+      }
+    },
+    {
+      "id": "R15",
+      "description": "BR · natural · medium · 15 g · 18 days off roast",
+      "input": {
+        "bean": {
+          "originCountry": "BR",
+          "process": "natural",
+          "roastLevel": "medium",
+          "roastDate": "2026-10-02"
+        },
+        "doseG": 15,
+        "preferences": null
+      },
+      "expect": {
+        "tempC": [
+          88,
+          94
+        ],
+        "ratio": [
+          14,
+          17
+        ],
+        "grind": [
+          "medium-fine",
+          "medium-coarse"
+        ],
+        "totalTimeS": [
+          150,
+          225
+        ],
+        "bloomS": [
+          30,
+          50
+        ],
+        "pours": [
+          2,
+          4
+        ]
+      }
+    },
+    {
+      "id": "R16",
+      "description": "BR · natural · medium-dark · 16 g · taste chocolatey · 22 days off roast",
+      "input": {
+        "bean": {
+          "originCountry": "BR",
+          "process": "natural",
+          "roastLevel": "medium-dark",
+          "roastDate": "2026-09-28"
+        },
+        "doseG": 16,
+        "preferences": {
+          "taste": "chocolatey",
+          "body": null,
+          "acidity": null
+        }
+      },
+      "expect": {
+        "tempC": [
+          86,
+          92
+        ],
+        "ratio": [
+          14,
+          16
+        ],
+        "grind": [
+          "medium",
+          "medium-coarse"
+        ],
+        "totalTimeS": [
+          135,
+          215
+        ],
+        "bloomS": [
+          30,
+          50
+        ],
+        "pours": [
+          2,
+          3
+        ]
+      }
+    },
+    {
+      "id": "R17",
+      "description": "BR · natural · dark · 18 g · taste chocolatey, body strong · 35 days off roast",
+      "input": {
+        "bean": {
+          "originCountry": "BR",
+          "process": "natural",
+          "roastLevel": "dark",
+          "roastDate": "2026-09-15"
+        },
+        "doseG": 18,
+        "preferences": {
+          "taste": "chocolatey",
+          "body": "strong",
+          "acidity": null
+        }
+      },
+      "expect": {
+        "tempC": [
+          86,
+          90
+        ],
+        "ratio": [
+          13,
+          16
+        ],
+        "grind": [
+          "medium",
+          "medium-coarse"
+        ],
+        "totalTimeS": [
+          135,
+          205
+        ],
+        "bloomS": [
+          30,
+          50
+        ],
+        "pours": [
+          2,
+          3
+        ]
+      }
+    },
+    {
+      "id": "R18",
+      "description": "BR · washed · medium · 25 g · acidity lowacid · 28 days off roast",
+      "input": {
+        "bean": {
+          "originCountry": "BR",
+          "process": "washed",
+          "roastLevel": "medium",
+          "roastDate": "2026-09-22"
+        },
+        "doseG": 25,
+        "preferences": {
+          "taste": null,
+          "body": null,
+          "acidity": "lowacid"
+        }
+      },
+      "expect": {
+        "tempC": [
+          88,
+          94
+        ],
+        "ratio": [
+          14,
+          17
+        ],
+        "grind": [
+          "medium-fine",
+          "medium-coarse"
+        ],
+        "totalTimeS": [
+          150,
+          240
+        ],
+        "bloomS": [
+          30,
+          50
+        ],
+        "pours": [
+          2,
+          4
+        ]
+      }
+    },
+    {
+      "id": "R19",
+      "description": "BR · honey · medium · 15 g · body concentrated · 16 days off roast",
+      "input": {
+        "bean": {
+          "originCountry": "BR",
+          "process": "honey",
+          "roastLevel": "medium",
+          "roastDate": "2026-10-04"
+        },
+        "doseG": 15,
+        "preferences": {
+          "taste": null,
+          "body": "concentrated",
+          "acidity": null
+        }
+      },
+      "expect": {
+        "tempC": [
+          88,
+          94
+        ],
+        "ratio": [
+          13,
+          17
+        ],
+        "grind": [
+          "medium-fine",
+          "medium-coarse"
+        ],
+        "totalTimeS": [
+          150,
+          225
+        ],
+        "bloomS": [
+          30,
+          50
+        ],
+        "pours": [
+          2,
+          4
+        ]
+      }
+    },
+    {
+      "id": "R20",
+      "description": "GT · washed · medium · 15 g · 14 days off roast",
+      "input": {
+        "bean": {
+          "originCountry": "GT",
+          "process": "washed",
+          "roastLevel": "medium",
+          "roastDate": "2026-10-06"
+        },
+        "doseG": 15,
+        "preferences": null
+      },
+      "expect": {
+        "tempC": [
+          89,
+          94
+        ],
+        "ratio": [
+          14,
+          17
+        ],
+        "grind": [
+          "medium-fine",
+          "medium-coarse"
+        ],
+        "totalTimeS": [
+          150,
+          225
+        ],
+        "bloomS": [
+          30,
+          50
+        ],
+        "pours": [
+          2,
+          4
+        ]
+      }
+    },
+    {
+      "id": "R21",
+      "description": "GT · washed · medium-dark · 15 g · taste chocolatey · 26 days off roast",
+      "input": {
+        "bean": {
+          "originCountry": "GT",
+          "process": "washed",
+          "roastLevel": "medium-dark",
+          "roastDate": "2026-09-24"
+        },
+        "doseG": 15,
+        "preferences": {
+          "taste": "chocolatey",
+          "body": null,
+          "acidity": null
+        }
+      },
+      "expect": {
+        "tempC": [
+          87,
+          92
+        ],
+        "ratio": [
+          14,
+          16
+        ],
+        "grind": [
+          "medium",
+          "medium-coarse"
+        ],
+        "totalTimeS": [
+          135,
+          215
+        ],
+        "bloomS": [
+          30,
+          50
+        ],
+        "pours": [
+          2,
+          3
+        ]
+      }
+    },
+    {
+      "id": "R22",
+      "description": "GT · washed · light · 12 g · taste floral, body light · 6 days off roast",
+      "input": {
+        "bean": {
+          "originCountry": "GT",
+          "process": "washed",
+          "roastLevel": "light",
+          "roastDate": "2026-10-14"
+        },
+        "doseG": 12,
+        "preferences": {
+          "taste": "floral",
+          "body": "light",
+          "acidity": null
+        }
+      },
+      "expect": {
+        "tempC": [
+          92,
+          96
+        ],
+        "ratio": [
+          15,
+          18
+        ],
+        "grind": [
+          "medium-fine",
+          "medium"
+        ],
+        "totalTimeS": [
+          165,
+          240
+        ],
+        "bloomS": [
+          35,
+          50
+        ],
+        "pours": [
+          3,
+          5
+        ]
+      }
+    },
+    {
+      "id": "R23",
+      "description": "HN · washed · medium · 15 g · taste balanced · 19 days off roast",
+      "input": {
+        "bean": {
+          "originCountry": "HN",
+          "process": "washed",
+          "roastLevel": "medium",
+          "roastDate": "2026-10-01"
+        },
+        "doseG": 15,
+        "preferences": {
+          "taste": "balanced",
+          "body": null,
+          "acidity": null
+        }
+      },
+      "expect": {
+        "tempC": [
+          89,
+          94
+        ],
+        "ratio": [
+          14,
+          17
+        ],
+        "grind": [
+          "medium-fine",
+          "medium-coarse"
+        ],
+        "totalTimeS": [
+          150,
+          225
+        ],
+        "bloomS": [
+          30,
+          50
+        ],
+        "pours": [
+          2,
+          4
+        ]
+      }
+    },
+    {
+      "id": "R24",
+      "description": "HN · honey · medium-light · 15 g · 12 days off roast",
+      "input": {
+        "bean": {
+          "originCountry": "HN",
+          "process": "honey",
+          "roastLevel": "medium-light",
+          "roastDate": "2026-10-08"
+        },
+        "doseG": 15,
+        "preferences": null
+      },
+      "expect": {
+        "tempC": [
+          90,
+          96
+        ],
+        "ratio": [
+          15,
+          17
+        ],
+        "grind": [
+          "medium-fine",
+          "medium"
+        ],
+        "totalTimeS": [
+          155,
+          235
+        ],
+        "bloomS": [
+          30,
+          50
+        ],
+        "pours": [
+          2,
+          4
+        ]
+      }
+    },
+    {
+      "id": "R25",
+      "description": "MX · washed · medium · 15 g · acidity smooth · 21 days off roast",
+      "input": {
+        "bean": {
+          "originCountry": "MX",
+          "process": "washed",
+          "roastLevel": "medium",
+          "roastDate": "2026-09-29"
+        },
+        "doseG": 15,
+        "preferences": {
+          "taste": null,
+          "body": null,
+          "acidity": "smooth"
+        }
+      },
+      "expect": {
+        "tempC": [
+          89,
+          94
+        ],
+        "ratio": [
+          14,
+          17
+        ],
+        "grind": [
+          "medium-fine",
+          "medium-coarse"
+        ],
+        "totalTimeS": [
+          150,
+          225
+        ],
+        "bloomS": [
+          30,
+          50
+        ],
+        "pours": [
+          2,
+          4
+        ]
+      }
+    },
+    {
+      "id": "R26",
+      "description": "MX · natural · dark · 15 g · acidity lowacid · 45 days off roast",
+      "input": {
+        "bean": {
+          "originCountry": "MX",
+          "process": "natural",
+          "roastLevel": "dark",
+          "roastDate": "2026-09-05"
+        },
+        "doseG": 15,
+        "preferences": {
+          "taste": null,
+          "body": null,
+          "acidity": "lowacid"
+        }
+      },
+      "expect": {
+        "tempC": [
+          86,
+          90
+        ],
+        "ratio": [
+          13,
+          16
+        ],
+        "grind": [
+          "medium",
+          "medium-coarse"
+        ],
+        "totalTimeS": [
+          135,
+          205
+        ],
+        "bloomS": [
+          30,
+          50
+        ],
+        "pours": [
+          2,
+          4
+        ]
+      }
+    },
+    {
+      "id": "R27",
+      "description": "CR · honey · light · 15 g · taste fruity · 10 days off roast",
+      "input": {
+        "bean": {
+          "originCountry": "CR",
+          "process": "honey",
+          "roastLevel": "light",
+          "roastDate": "2026-10-10"
+        },
+        "doseG": 15,
+        "preferences": {
+          "taste": "fruity",
+          "body": null,
+          "acidity": null
+        }
+      },
+      "expect": {
+        "tempC": [
+          91,
+          96
+        ],
+        "ratio": [
+          15,
+          17
+        ],
+        "grind": [
+          "medium-fine",
+          "medium"
+        ],
+        "totalTimeS": [
+          165,
+          240
+        ],
+        "bloomS": [
+          30,
+          50
+        ],
+        "pours": [
+          3,
+          5
+        ]
+      }
+    },
+    {
+      "id": "R28",
+      "description": "CR · washed · medium-light · 18 g · 17 days off roast",
+      "input": {
+        "bean": {
+          "originCountry": "CR",
+          "process": "washed",
+          "roastLevel": "medium-light",
+          "roastDate": "2026-10-03"
+        },
+        "doseG": 18,
+        "preferences": null
+      },
+      "expect": {
+        "tempC": [
+          91,
+          96
+        ],
+        "ratio": [
+          15,
+          17
+        ],
+        "grind": [
+          "medium-fine",
+          "medium"
+        ],
+        "totalTimeS": [
+          155,
+          235
+        ],
+        "bloomS": [
+          30,
+          50
+        ],
+        "pours": [
+          2,
+          4
+        ]
+      }
+    },
+    {
+      "id": "R29",
+      "description": "PA · washed · light · 14 g · taste floral · 13 days off roast",
+      "input": {
+        "bean": {
+          "originCountry": "PA",
+          "process": "washed",
+          "roastLevel": "light",
+          "roastDate": "2026-10-07"
+        },
+        "doseG": 14,
+        "preferences": {
+          "taste": "floral",
+          "body": null,
+          "acidity": null
+        }
+      },
+      "expect": {
+        "tempC": [
+          92,
+          96
+        ],
+        "ratio": [
+          15,
+          17
+        ],
+        "grind": [
+          "medium-fine",
+          "medium"
+        ],
+        "totalTimeS": [
+          165,
+          240
+        ],
+        "bloomS": [
+          30,
+          50
+        ],
+        "pours": [
+          3,
+          5
+        ]
+      }
+    },
+    {
+      "id": "R30",
+      "description": "PA · natural · light · 15 g · taste fruity, acidity bright · 4 days off roast",
+      "input": {
+        "bean": {
+          "originCountry": "PA",
+          "process": "natural",
+          "roastLevel": "light",
+          "roastDate": "2026-10-16"
+        },
+        "doseG": 15,
+        "preferences": {
+          "taste": "fruity",
+          "body": null,
+          "acidity": "bright"
+        }
+      },
+      "expect": {
+        "tempC": [
+          91,
+          96
+        ],
+        "ratio": [
+          15,
+          17
+        ],
+        "grind": [
+          "medium-fine",
+          "medium-coarse"
+        ],
+        "totalTimeS": [
+          165,
+          240
+        ],
+        "bloomS": [
+          35,
+          50
+        ],
+        "pours": [
+          3,
+          5
+        ]
+      }
+    },
+    {
+      "id": "R31",
+      "description": "ID · wet-hulled · medium-dark · 16 g · 20 days off roast",
+      "input": {
+        "bean": {
+          "originCountry": "ID",
+          "process": "wet-hulled",
+          "roastLevel": "medium-dark",
+          "roastDate": "2026-09-30"
+        },
+        "doseG": 16,
+        "preferences": null
+      },
+      "expect": {
+        "tempC": [
+          86,
+          92
+        ],
+        "ratio": [
+          14,
+          16
+        ],
+        "grind": [
+          "medium",
+          "medium-coarse"
+        ],
+        "totalTimeS": [
+          135,
+          215
+        ],
+        "bloomS": [
+          30,
+          50
+        ],
+        "pours": [
+          2,
+          4
+        ]
+      }
+    },
+    {
+      "id": "R32",
+      "description": "ID · wet-hulled · dark · 18 g · taste chocolatey, body strong · 30 days off roast",
+      "input": {
+        "bean": {
+          "originCountry": "ID",
+          "process": "wet-hulled",
+          "roastLevel": "dark",
+          "roastDate": "2026-09-20"
+        },
+        "doseG": 18,
+        "preferences": {
+          "taste": "chocolatey",
+          "body": "strong",
+          "acidity": null
+        }
+      },
+      "expect": {
+        "tempC": [
+          86,
+          90
+        ],
+        "ratio": [
+          13,
+          16
+        ],
+        "grind": [
+          "medium",
+          "medium-coarse"
+        ],
+        "totalTimeS": [
+          135,
+          205
+        ],
+        "bloomS": [
+          30,
+          50
+        ],
+        "pours": [
+          2,
+          3
+        ]
+      }
+    },
+    {
+      "id": "R33",
+      "description": "ID · wet-hulled · medium · 15 g · acidity lowacid · 25 days off roast",
+      "input": {
+        "bean": {
+          "originCountry": "ID",
+          "process": "wet-hulled",
+          "roastLevel": "medium",
+          "roastDate": "2026-09-25"
+        },
+        "doseG": 15,
+        "preferences": {
+          "taste": null,
+          "body": null,
+          "acidity": "lowacid"
+        }
+      },
+      "expect": {
+        "tempC": [
+          87,
+          94
+        ],
+        "ratio": [
+          14,
+          17
+        ],
+        "grind": [
+          "medium-fine",
+          "medium-coarse"
+        ],
+        "totalTimeS": [
+          150,
+          225
+        ],
+        "bloomS": [
+          30,
+          50
+        ],
+        "pours": [
+          2,
+          4
+        ]
+      }
+    },
+    {
+      "id": "R34",
+      "description": "YE · natural · medium-light · 15 g · taste fruity · 15 days off roast",
+      "input": {
+        "bean": {
+          "originCountry": "YE",
+          "process": "natural",
+          "roastLevel": "medium-light",
+          "roastDate": "2026-10-05"
+        },
+        "doseG": 15,
+        "preferences": {
+          "taste": "fruity",
+          "body": null,
+          "acidity": null
+        }
+      },
+      "expect": {
+        "tempC": [
+          90,
+          96
+        ],
+        "ratio": [
+          15,
+          17
+        ],
+        "grind": [
+          "medium-fine",
+          "medium-coarse"
+        ],
+        "totalTimeS": [
+          155,
+          235
+        ],
+        "bloomS": [
+          30,
+          50
+        ],
+        "pours": [
+          3,
+          5
+        ]
+      }
+    },
+    {
+      "id": "R35",
+      "description": "YE · natural · medium · 15 g · 60 days off roast",
+      "input": {
+        "bean": {
+          "originCountry": "YE",
+          "process": "natural",
+          "roastLevel": "medium",
+          "roastDate": "2026-08-21"
+        },
+        "doseG": 15,
+        "preferences": null
+      },
+      "expect": {
+        "tempC": [
+          88,
+          94
+        ],
+        "ratio": [
+          14,
+          17
+        ],
+        "grind": [
+          "medium-fine",
+          "medium-coarse"
+        ],
+        "totalTimeS": [
+          150,
+          225
+        ],
+        "bloomS": [
+          30,
+          50
+        ],
+        "pours": [
+          2,
+          4
+        ]
+      }
+    },
+    {
+      "id": "R36",
+      "description": "RW · washed · light · 15 g · taste floral · 11 days off roast",
+      "input": {
+        "bean": {
+          "originCountry": "RW",
+          "process": "washed",
+          "roastLevel": "light",
+          "roastDate": "2026-10-09"
+        },
+        "doseG": 15,
+        "preferences": {
+          "taste": "floral",
+          "body": null,
+          "acidity": null
+        }
+      },
+      "expect": {
+        "tempC": [
+          92,
+          96
+        ],
+        "ratio": [
+          15,
+          17
+        ],
+        "grind": [
+          "medium-fine",
+          "medium"
+        ],
+        "totalTimeS": [
+          165,
+          240
+        ],
+        "bloomS": [
+          30,
+          50
+        ],
+        "pours": [
+          3,
+          5
+        ]
+      }
+    },
+    {
+      "id": "R37",
+      "description": "RW · natural · medium-light · 15 g · body medium · 24 days off roast",
+      "input": {
+        "bean": {
+          "originCountry": "RW",
+          "process": "natural",
+          "roastLevel": "medium-light",
+          "roastDate": "2026-09-26"
+        },
+        "doseG": 15,
+        "preferences": {
+          "taste": null,
+          "body": "medium",
+          "acidity": null
+        }
+      },
+      "expect": {
+        "tempC": [
+          90,
+          96
+        ],
+        "ratio": [
+          15,
+          17
+        ],
+        "grind": [
+          "medium-fine",
+          "medium-coarse"
+        ],
+        "totalTimeS": [
+          155,
+          235
+        ],
+        "bloomS": [
+          30,
+          50
+        ],
+        "pours": [
+          2,
+          4
+        ]
+      }
+    },
+    {
+      "id": "R38",
+      "description": "PE · washed · medium · 15 g · 14 days off roast",
+      "input": {
+        "bean": {
+          "originCountry": "PE",
+          "process": "washed",
+          "roastLevel": "medium",
+          "roastDate": "2026-10-06"
+        },
+        "doseG": 15,
+        "preferences": null
+      },
+      "expect": {
+        "tempC": [
+          89,
+          94
+        ],
+        "ratio": [
+          14,
+          17
+        ],
+        "grind": [
+          "medium-fine",
+          "medium-coarse"
+        ],
+        "totalTimeS": [
+          150,
+          225
+        ],
+        "bloomS": [
+          30,
+          50
+        ],
+        "pours": [
+          2,
+          4
+        ]
+      }
+    },
+    {
+      "id": "R39",
+      "description": "BI · washed · light · 15 g · taste fruity · 9 days off roast",
+      "input": {
+        "bean": {
+          "originCountry": "BI",
+          "process": "washed",
+          "roastLevel": "light",
+          "roastDate": "2026-10-11"
+        },
+        "doseG": 15,
+        "preferences": {
+          "taste": "fruity",
+          "body": null,
+          "acidity": null
+        }
+      },
+      "expect": {
+        "tempC": [
+          92,
+          96
+        ],
+        "ratio": [
+          15,
+          17
+        ],
+        "grind": [
+          "medium-fine",
+          "medium"
+        ],
+        "totalTimeS": [
+          165,
+          240
+        ],
+        "bloomS": [
+          30,
+          50
+        ],
+        "pours": [
+          3,
+          5
+        ]
+      }
+    },
+    {
+      "id": "R40",
+      "description": "TZ · washed · medium-light · 15 g · 18 days off roast",
+      "input": {
+        "bean": {
+          "originCountry": "TZ",
+          "process": "washed",
+          "roastLevel": "medium-light",
+          "roastDate": "2026-10-02"
+        },
+        "doseG": 15,
+        "preferences": null
+      },
+      "expect": {
+        "tempC": [
+          91,
+          96
+        ],
+        "ratio": [
+          15,
+          17
+        ],
+        "grind": [
+          "medium-fine",
+          "medium"
+        ],
+        "totalTimeS": [
+          155,
+          235
+        ],
+        "bloomS": [
+          30,
+          50
+        ],
+        "pours": [
+          2,
+          4
+        ]
+      }
+    },
+    {
+      "id": "R41",
+      "description": "UG · natural · medium-dark · 18 g · taste chocolatey · 27 days off roast",
+      "input": {
+        "bean": {
+          "originCountry": "UG",
+          "process": "natural",
+          "roastLevel": "medium-dark",
+          "roastDate": "2026-09-23"
+        },
+        "doseG": 18,
+        "preferences": {
+          "taste": "chocolatey",
+          "body": null,
+          "acidity": null
+        }
+      },
+      "expect": {
+        "tempC": [
+          86,
+          92
+        ],
+        "ratio": [
+          14,
+          16
+        ],
+        "grind": [
+          "medium",
+          "medium-coarse"
+        ],
+        "totalTimeS": [
+          135,
+          215
+        ],
+        "bloomS": [
+          30,
+          50
+        ],
+        "pours": [
+          2,
+          3
+        ]
+      }
+    },
+    {
+      "id": "R42",
+      "description": "IN · washed · dark · 15 g · acidity lowacid, body strong · 33 days off roast",
+      "input": {
+        "bean": {
+          "originCountry": "IN",
+          "process": "washed",
+          "roastLevel": "dark",
+          "roastDate": "2026-09-17"
+        },
+        "doseG": 15,
+        "preferences": {
+          "taste": null,
+          "body": "strong",
+          "acidity": "lowacid"
+        }
+      },
+      "expect": {
+        "tempC": [
+          86,
+          90
+        ],
+        "ratio": [
+          13,
+          16
+        ],
+        "grind": [
+          "medium",
+          "medium-coarse"
+        ],
+        "totalTimeS": [
+          135,
+          205
+        ],
+        "bloomS": [
+          30,
+          50
+        ],
+        "pours": [
+          2,
+          4
+        ]
+      }
+    },
+    {
+      "id": "R43",
+      "description": "VN · natural · dark · 20 g · body concentrated · 40 days off roast",
+      "input": {
+        "bean": {
+          "originCountry": "VN",
+          "process": "natural",
+          "roastLevel": "dark",
+          "roastDate": "2026-09-10"
+        },
+        "doseG": 20,
+        "preferences": {
+          "taste": null,
+          "body": "concentrated",
+          "acidity": null
+        }
+      },
+      "expect": {
+        "tempC": [
+          86,
+          90
+        ],
+        "ratio": [
+          13,
+          16
+        ],
+        "grind": [
+          "medium",
+          "medium-coarse"
+        ],
+        "totalTimeS": [
+          135,
+          205
+        ],
+        "bloomS": [
+          30,
+          50
+        ],
+        "pours": [
+          2,
+          4
+        ]
+      }
+    },
+    {
+      "id": "R44",
+      "description": "SV · honey · medium · 15 g · taste balanced · 13 days off roast",
+      "input": {
+        "bean": {
+          "originCountry": "SV",
+          "process": "honey",
+          "roastLevel": "medium",
+          "roastDate": "2026-10-07"
+        },
+        "doseG": 15,
+        "preferences": {
+          "taste": "balanced",
+          "body": null,
+          "acidity": null
+        }
+      },
+      "expect": {
+        "tempC": [
+          88,
+          94
+        ],
+        "ratio": [
+          14,
+          17
+        ],
+        "grind": [
+          "medium-fine",
+          "medium-coarse"
+        ],
+        "totalTimeS": [
+          150,
+          225
+        ],
+        "bloomS": [
+          30,
+          50
+        ],
+        "pours": [
+          2,
+          4
+        ]
+      }
+    },
+    {
+      "id": "R45",
+      "description": "NI · washed · medium · 15 g · no roast date",
+      "input": {
+        "bean": {
+          "originCountry": "NI",
+          "process": "washed",
+          "roastLevel": "medium",
+          "roastDate": null
+        },
+        "doseG": 15,
+        "preferences": null
+      },
+      "expect": {
+        "tempC": [
+          89,
+          94
+        ],
+        "ratio": [
+          14,
+          17
+        ],
+        "grind": [
+          "medium-fine",
+          "medium-coarse"
+        ],
+        "totalTimeS": [
+          150,
+          225
+        ],
+        "bloomS": [
+          30,
+          50
+        ],
+        "pours": [
+          2,
+          4
+        ]
+      }
+    },
+    {
+      "id": "R46",
+      "description": "unknown origin · unknown process · unknown roast · 15 g · no roast date",
+      "input": {
+        "bean": {
+          "originCountry": null,
+          "process": null,
+          "roastLevel": null,
+          "roastDate": null
+        },
+        "doseG": 15,
+        "preferences": null
+      },
+      "expect": {
+        "tempC": [
+          88,
+          96
+        ],
+        "ratio": [
+          14,
+          17
+        ],
+        "grind": [
+          "medium-fine",
+          "medium-coarse"
+        ],
+        "totalTimeS": [
+          140,
+          235
+        ],
+        "bloomS": [
+          30,
+          50
+        ],
+        "pours": [
+          2,
+          4
+        ]
+      }
+    },
+    {
+      "id": "R47",
+      "description": "unknown origin · washed · light · 15 g · 7 days off roast",
+      "input": {
+        "bean": {
+          "originCountry": null,
+          "process": "washed",
+          "roastLevel": "light",
+          "roastDate": "2026-10-13"
+        },
+        "doseG": 15,
+        "preferences": null
+      },
+      "expect": {
+        "tempC": [
+          92,
+          96
+        ],
+        "ratio": [
+          15,
+          17
+        ],
+        "grind": [
+          "medium-fine",
+          "medium"
+        ],
+        "totalTimeS": [
+          165,
+          240
+        ],
+        "bloomS": [
+          30,
+          50
+        ],
+        "pours": [
+          2,
+          4
+        ]
+      }
+    },
+    {
+      "id": "R48",
+      "description": "unknown origin · unknown process · dark · 15 g · taste chocolatey · no roast date",
+      "input": {
+        "bean": {
+          "originCountry": null,
+          "process": null,
+          "roastLevel": "dark",
+          "roastDate": null
+        },
+        "doseG": 15,
+        "preferences": {
+          "taste": "chocolatey",
+          "body": null,
+          "acidity": null
+        }
+      },
+      "expect": {
+        "tempC": [
+          86,
+          90
+        ],
+        "ratio": [
+          13,
+          16
+        ],
+        "grind": [
+          "medium",
+          "medium-coarse"
+        ],
+        "totalTimeS": [
+          135,
+          205
+        ],
+        "bloomS": [
+          30,
+          50
+        ],
+        "pours": [
+          2,
+          3
+        ]
+      }
+    },
+    {
+      "id": "R49",
+      "description": "ET · unknown process · unknown roast · 30 g · 2 days off roast",
+      "input": {
+        "bean": {
+          "originCountry": "ET",
+          "process": null,
+          "roastLevel": null,
+          "roastDate": "2026-10-18"
+        },
+        "doseG": 30,
+        "preferences": null
+      },
+      "expect": {
+        "tempC": [
+          88,
+          96
+        ],
+        "ratio": [
+          14,
+          17
+        ],
+        "grind": [
+          "medium-fine",
+          "medium-coarse"
+        ],
+        "totalTimeS": [
+          140,
+          250
+        ],
+        "bloomS": [
+          35,
+          50
+        ],
+        "pours": [
+          2,
+          4
+        ]
+      }
+    },
+    {
+      "id": "R50",
+      "description": "CO · washed · medium · 10 g · taste balanced, body light, acidity smooth · 365 days off roast",
+      "input": {
+        "bean": {
+          "originCountry": "CO",
+          "process": "washed",
+          "roastLevel": "medium",
+          "roastDate": "2025-10-20"
+        },
+        "doseG": 10,
+        "preferences": {
+          "taste": "balanced",
+          "body": "light",
+          "acidity": "smooth"
+        }
+      },
+      "expect": {
+        "tempC": [
+          89,
+          94
+        ],
+        "ratio": [
+          14,
+          18
+        ],
+        "grind": [
+          "medium-fine",
+          "medium-coarse"
+        ],
+        "totalTimeS": [
+          150,
+          225
+        ],
+        "bloomS": [
+          30,
+          50
+        ],
+        "pours": [
+          2,
+          4
+        ]
+      }
+    }
+  ]
+}

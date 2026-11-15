@@ -1,263 +1,25 @@
-import { useState, useRef, useEffect } from 'react'
-import { analyzeCoffeeLabel, generateBrewRecipe } from '../api.js'
+import { useState, useRef, useEffect, useMemo } from 'react'
+import { scanLabel, getRecipe } from '../lib/api.ts'
+import { prepareImage, rejectReason } from '../lib/image.ts'
+import { EMPTY_FORM, FORM_TO_SCAN, attributesFromForm, beanDraftFromForm, formFromScan } from '../lib/beanForm.ts'
+import { saveScannedBrew } from '../data/repositories.ts'
+import { COUNTRIES } from '../domain/normalise/country.ts'
+import { PROCESSES, ROAST_LEVELS, label } from '../domain/enums.ts'
+import { defaultDose } from '../domain/recipe/baseline.ts'
+import { baselineRecipe } from '../domain/recipe/engine.ts'
+import { formatRecipe } from '../domain/recipe/format.ts'
+import { POURS_BY_TASTE, V60 } from '../domain/rules/index.ts'
 import {
   IconCamera, IconUpload, IconArrowRight, IconRefresh,
-  IconGlobe, IconFlame, IconGear, IconLeaf, IconMountain, IconSparkle,
   IconScale, IconDroplet, IconThermometer, IconClock, IconGrid, IconRuler,
   IconLightbulb, IconCheck,
 } from './Icons.jsx'
 import './LabelScanner.css'
 
-const STORAGE_KEY = 'brewmap_journal'
-const MAX_DIM_API     = 512   // max dimension for API payload
-const MAX_DIM_PREVIEW = 800   // max dimension for preview thumbnail
-const MAX_FILE_MB     = 20    // reject files over this size
+const COUNTRY_OPTIONS = [...COUNTRIES].sort((a, b) => a.name.localeCompare(b.name))
+const EMPTY_FLAVOR = { taste: null, body: null, acidity: null }
 
-function isImageFile(file) {
-  if (file.type.startsWith('image/')) return true
-  return /\.(jpe?g|png|gif|webp|heic|heif|avif|tiff?|bmp)$/i.test(file.name)
-}
-
-function isHeicFile(file) {
-  return /heic|heif/i.test(file.type) || /\.(heic|heif)$/i.test(file.name)
-}
-
-// Resize via canvas → JPEG blob. Works for any format the browser can decode.
-function resizeViaCanvas(img, maxDim, quality) {
-  const scale = Math.min(1, maxDim / Math.max(img.width, img.height))
-  const w = Math.round(img.width * scale)
-  const h = Math.round(img.height * scale)
-  const canvas = document.createElement('canvas')
-  canvas.width = w; canvas.height = h
-  canvas.getContext('2d').drawImage(img, 0, 0, w, h)
-  return new Promise((resolve, reject) => {
-    canvas.toBlob(blob => {
-      if (!blob) reject(new Error('Could not process image. Please try a JPEG or PNG.'))
-      else resolve(blob)
-    }, 'image/jpeg', quality)
-  })
-}
-
-// Load an image from a File or Blob, with timeout for slow devices
-function loadImage(src, timeoutMs = 15000) {
-  return new Promise((resolve, reject) => {
-    const img = new Image()
-    const timer = setTimeout(() => {
-      img.src = ''
-      reject(new Error('Image took too long to load. Try a smaller photo.'))
-    }, timeoutMs)
-    img.onload  = () => { clearTimeout(timer); resolve(img) }
-    img.onerror = () => { clearTimeout(timer); reject(null) } // caller handles message
-    img.src = src
-  })
-}
-
-// Generate a compressed preview thumbnail (keeps memory low on mobile)
-function createPreviewUrl(file) {
-  return new Promise(async (resolve) => {
-    const url = URL.createObjectURL(file)
-    try {
-      const img = await loadImage(url)
-      URL.revokeObjectURL(url)
-      const blob = await resizeViaCanvas(img, MAX_DIM_PREVIEW, 0.7)
-      const reader = new FileReader()
-      reader.onload = e => resolve(e.target.result)
-      reader.onerror = () => resolve(url) // fallback to raw
-      reader.readAsDataURL(blob)
-    } catch {
-      // Can't decode (HEIC on non-Safari) — use object URL as-is, preview may fail
-      resolve(url)
-    }
-  })
-}
-
-// Compress for API: small JPEG base64
-function resizeImageForApi(file) {
-  return new Promise(async (resolve, reject) => {
-    const url = URL.createObjectURL(file)
-    try {
-      const img = await loadImage(url)
-      URL.revokeObjectURL(url)
-      const blob = await resizeViaCanvas(img, MAX_DIM_API, 0.72)
-      const reader = new FileReader()
-      reader.onload = e => resolve({ base64: e.target.result.split(',')[1], mimeType: 'image/jpeg' })
-      reader.onerror = () => reject(new Error('Failed to read image file.'))
-      reader.readAsDataURL(blob)
-    } catch {
-      URL.revokeObjectURL(url)
-      if (isHeicFile(file)) {
-        reject(new Error('HEIC photos aren\'t supported by this browser. On iPhone, go to Settings → Camera → Formats → Most Compatible, or share the photo to yourself first.'))
-      } else {
-        reject(new Error('Could not decode this image. Please try a JPEG or PNG file.'))
-      }
-    }
-  })
-}
-
-/*
- * Origin profiles — SCA-aligned defaults for common origins.
- * Each profile tweaks ratio, temp, grind, bloom, and timing to suit the
- * typical density, altitude, and flavour profile of that origin.
- */
-const ORIGIN_PROFILES = {
-  ethiopia:   { ratio: '1:17', temp: 94, grind: 'Medium-Fine',   bloom: 40, total: '3:30', coffee: 15, notes: 'Ethiopian beans are high-altitude and dense — a longer bloom and finer grind unlock floral and fruit complexity.' },
-  kenya:      { ratio: '1:16', temp: 95, grind: 'Medium-Fine',   bloom: 35, total: '3:20', coffee: 15, notes: 'Kenyan AA is bright and juicy. Higher temp brings out the sparkling acidity and blackcurrant notes.' },
-  colombia:   { ratio: '1:16', temp: 93, grind: 'Medium',        bloom: 30, total: '3:10', coffee: 15, notes: 'Colombian coffees are balanced and forgiving — a classic medium extraction works well.' },
-  brazil:     { ratio: '1:15', temp: 91, grind: 'Medium-Coarse', bloom: 35, total: '3:00', coffee: 16, notes: 'Brazilian beans are low-acid and full-bodied. Coarser grind and lower temp emphasise chocolate and nut sweetness.' },
-  guatemala:  { ratio: '1:16', temp: 93, grind: 'Medium',        bloom: 30, total: '3:10', coffee: 15, notes: 'Guatemalan coffees pair well with a balanced extraction — expect cocoa, spice, and mild fruit.' },
-  honduras:   { ratio: '1:16', temp: 92, grind: 'Medium',        bloom: 30, total: '3:05', coffee: 15, notes: 'Honduran beans offer caramel sweetness — a moderate approach lets the sugars shine.' },
-  mexico:     { ratio: '1:16', temp: 92, grind: 'Medium',        bloom: 30, total: '3:05', coffee: 15, notes: 'Mexican coffees tend to be mild and nutty — keep extraction even for a clean, sweet cup.' },
-  costarica:  { ratio: '1:16', temp: 93, grind: 'Medium-Fine',   bloom: 30, total: '3:15', coffee: 15, notes: 'Costa Rican honey-processed lots shine with a slightly finer grind to draw out honey and stone-fruit notes.' },
-  panama:     { ratio: '1:17', temp: 94, grind: 'Medium-Fine',   bloom: 40, total: '3:30', coffee: 14, notes: 'Panamanian Gesha is delicate — use more water and a longer bloom to capture jasmine and bergamot.' },
-  indonesia:  { ratio: '1:14', temp: 90, grind: 'Medium-Coarse', bloom: 35, total: '2:50', coffee: 16, notes: 'Indonesian wet-hulled coffees are earthy and heavy — a shorter, coarser brew prevents muddiness.' },
-  yemen:      { ratio: '1:16', temp: 94, grind: 'Medium-Fine',   bloom: 40, total: '3:25', coffee: 15, notes: 'Yemeni beans are wild and complex — a longer bloom and higher temp coax out dried-fruit and spice layers.' },
-  rwanda:     { ratio: '1:16', temp: 94, grind: 'Medium-Fine',   bloom: 35, total: '3:20', coffee: 15, notes: 'Rwandan lots are bright and tea-like. A finer grind brings out red-fruit and floral sweetness.' },
-}
-
-/* Process adjustments — applied on top of origin defaults */
-const PROCESS_ADJUSTMENTS = {
-  natural:  { tempDelta: -1, grindShift: 1, bloomDelta: 5,  ratioShift: -1, tip: 'Natural process adds fruity sweetness — lower temp and coarser grind prevent over-extraction of fermented sugars.' },
-  honey:    { tempDelta: -1, grindShift: 0, bloomDelta: 5,  ratioShift: 0,  tip: 'Honey process retains mucilage sweetness — a slightly lower temp preserves the caramel and stone-fruit character.' },
-  anaerobic:{ tempDelta: -2, grindShift: 1, bloomDelta: 10, ratioShift: -1, tip: 'Anaerobic fermentation intensifies flavour — go coarser and cooler to keep the funky fruit notes in balance.' },
-  washed:   { tempDelta: 0,  grindShift: 0, bloomDelta: 0,  ratioShift: 0,  tip: 'Washed process gives a clean cup — standard parameters let terroir and acidity speak clearly.' },
-  wethulled:{ tempDelta: -1, grindShift: 1, bloomDelta: 0,  ratioShift: 1,  tip: 'Wet-hulled (Giling Basah) coffees are earthy — coarser grind tames the heavy body.' },
-}
-
-/* Roast-level adjustments — applied on top of origin + process */
-const ROAST_ADJUSTMENTS = {
-  light:       { tempDelta: 2,  grindShift: -1, timeDelta: 15 },
-  mediumlight: { tempDelta: 1,  grindShift: 0,  timeDelta: 5 },
-  medium:      { tempDelta: 0,  grindShift: 0,  timeDelta: 0 },
-  mediumdark:  { tempDelta: -1, grindShift: 1,  timeDelta: -10 },
-  dark:        { tempDelta: -3, grindShift: 2,  timeDelta: -20 },
-}
-
-const GRIND_SCALE = ['Fine', 'Medium-Fine', 'Medium', 'Medium-Coarse', 'Coarse']
-
-function shiftGrind(base, delta) {
-  const idx = GRIND_SCALE.indexOf(base)
-  if (idx === -1) return base
-  return GRIND_SCALE[Math.max(0, Math.min(GRIND_SCALE.length - 1, idx + delta))]
-}
-
-function parseRatio(r) {
-  const m = r.match(/1:(\d+)/)
-  return m ? parseInt(m[1], 10) : 16
-}
-
-function addSeconds(timeStr, deltaSec) {
-  const [m, s] = timeStr.split(':').map(Number)
-  const totalSec = Math.max(120, m * 60 + s + deltaSec)
-  return `${Math.floor(totalSec / 60)}:${String(totalSec % 60).padStart(2, '0')}`
-}
-
-function getDefaultDose({ origin = '' }) {
-  const originKey = origin.toLowerCase().replace(/\s+/g, '')
-  return (ORIGIN_PROFILES[originKey] || { coffee: 15 }).coffee
-}
-
-function generateBrewGuide({ origin = '', roastLevel = '', process: proc = '' }, customDose) {
-  // 1. Look up origin profile (fall back to generic Colombia-like defaults)
-  const originKey = origin.toLowerCase().replace(/\s+/g, '')
-  const base = ORIGIN_PROFILES[originKey] || {
-    ratio: '1:16', temp: 93, grind: 'Medium', bloom: 30, total: '3:10', coffee: 15,
-    notes: 'Pre-rinse your filter with hot water and use filtered water for the cleanest cup.',
-  }
-
-  // 2. Apply process adjustment
-  const procKey = proc.toLowerCase().replace(/[\s-]+/g, '')
-  const pa = PROCESS_ADJUSTMENTS[procKey] || PROCESS_ADJUSTMENTS.washed
-
-  let temp  = base.temp + pa.tempDelta
-  let grind = shiftGrind(base.grind, pa.grindShift)
-  let bloom = base.bloom + pa.bloomDelta
-  let ratio = parseRatio(base.ratio) + pa.ratioShift
-  let totalTime = base.total
-
-  // Use custom dose if provided, otherwise origin default
-  const coffee = customDose || base.coffee
-
-  // 3. Apply roast adjustment
-  const roastKey = roastLevel.toLowerCase().replace(/[\s-]+/g, '')
-  const ra = ROAST_ADJUSTMENTS[roastKey] || ROAST_ADJUSTMENTS.medium
-
-  temp  = Math.max(85, Math.min(98, temp + ra.tempDelta))
-  grind = shiftGrind(grind, ra.grindShift)
-  totalTime = addSeconds(totalTime, ra.timeDelta)
-
-  // 4. Scale brew time proportionally when dose differs from default
-  const doseRatio = coffee / base.coffee
-  if (doseRatio !== 1) {
-    // Larger dose = slightly longer brew; scale gently (sqrt curve)
-    const timeScale = Math.sqrt(doseRatio)
-    const [tM, tS] = totalTime.split(':').map(Number)
-    const scaled = Math.round((tM * 60 + tS) * timeScale)
-    totalTime = `${Math.floor(scaled / 60)}:${String(scaled % 60).padStart(2, '0')}`
-  }
-
-  // 5. Compute water amounts from ratio + coffee
-  const totalWater = Math.round(coffee * ratio)
-  const bloomWater = Math.round(coffee * 2)
-  const remaining  = totalWater - bloomWater
-  const firstPour  = Math.round(remaining * 0.5)
-  const finalPour  = totalWater - bloomWater - firstPour
-
-  // 6. Compute step timings
-  const bloomEnd   = `0:${String(bloom).padStart(2, '0')}`
-  const [totalM, totalS] = totalTime.split(':').map(Number)
-  const totalSec   = totalM * 60 + totalS
-  const firstEnd   = `${Math.floor((bloom + (totalSec - bloom) * 0.45) / 60)}:${String(Math.round((bloom + (totalSec - bloom) * 0.45) % 60)).padStart(2, '0')}`
-
-  // 7. Build tips — combine process tip + origin note
-  const tips = pa.tip + ' ' + base.notes
-
-  return {
-    coffeeAmount: `${coffee}g`,
-    waterAmount:  `${totalWater}ml`,
-    ratio:        `1:${ratio}`,
-    waterTemp:    `${temp}°C`,
-    grindSize:    grind,
-    totalTime,
-    steps: [
-      { name: 'Bloom',      water: `${bloomWater}ml`, waitUntil: bloomEnd,  notes: `Saturate grounds in a slow spiral. Let CO₂ release for ${bloom} seconds.` },
-      { name: 'First Pour', water: `${firstPour}ml`,  waitUntil: firstEnd,  notes: 'Steady circular pour from centre outward. Keep the slurry level even.' },
-      { name: 'Final Pour', water: `${finalPour}ml`,  waitUntil: totalTime, notes: 'Gentle finish pour. Aim for a flat, even bed as the last drops drain through.' },
-    ],
-    tips,
-  }
-}
-
-// Unique ID: timestamp + random suffix to avoid collisions
-function uid() {
-  return `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
-}
-
-function saveToJournal(coffeeData, imageDataUrl) {
-  let existing = []
-  try { existing = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]') } catch {}
-  const entry = {
-    id: uid(),
-    savedAt: new Date().toISOString(),
-    imageDataUrl,
-    ...coffeeData,
-  }
-  const data = [entry, ...existing]
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
-  } catch {
-    // Quota exceeded — retry without images to ensure recipe data is saved
-    const slim = data.map(({ imageDataUrl: _img, ...rest }) => rest)
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(slim))
-    } catch {
-      // Still failing — drop oldest entries until it fits
-      const trimmed = slim.slice(0, Math.max(1, slim.length - 5))
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(trimmed))
-    }
-  }
-}
-
-// Persist scanner session so switching tabs doesn't lose state
+// Keep progress through a reload (photos stay in memory only).
 const SESSION_KEY = 'brewmap_scanner_session'
 
 function loadSession() {
@@ -265,11 +27,16 @@ function loadSession() {
 }
 
 function persistSession(state) {
-  try { sessionStorage.setItem(SESSION_KEY, JSON.stringify(state)) } catch {}
+  try { sessionStorage.setItem(SESSION_KEY, JSON.stringify(state)) } catch { /* private mode */ }
 }
 
 function clearSession() {
-  try { sessionStorage.removeItem(SESSION_KEY) } catch {}
+  try { sessionStorage.removeItem(SESSION_KEY) } catch { /* private mode */ }
+}
+
+function fallbackMessage(reason) {
+  if (reason === 'offline') return 'You are offline, so this recipe comes from BrewMap’s brewing rules.'
+  return 'AI personalisation is not available right now, so this recipe comes from BrewMap’s brewing rules.'
 }
 
 /* ===== Progress Bar ===== */
@@ -278,18 +45,18 @@ const STEP_LABELS = ['Scan', 'Confirm', 'Customize', 'Brew']
 function ProgressBar({ current }) {
   return (
     <div className="scan-progress" aria-label="Progress">
-      {STEP_LABELS.map((label, i) => {
+      {STEP_LABELS.map((stepLabel, i) => {
         const n = i + 1
         const done   = n < current
         const active = n === current
         return (
-          <div key={label} className="scan-progress-track">
+          <div key={stepLabel} className="scan-progress-track">
             {i > 0 && <div className={`scan-progress-line${done || active ? ' lit' : ''}`} />}
             <div className="scan-progress-step">
               <div className={`scan-dot${done ? ' done' : active ? ' active' : ''}`}>
                 {done ? '✓' : n}
               </div>
-              <span className={`scan-dot-label${active ? ' active' : ''}`}>{label}</span>
+              <span className={`scan-dot-label${active ? ' active' : ''}`}>{stepLabel}</span>
             </div>
           </div>
         )
@@ -300,106 +67,103 @@ function ProgressBar({ current }) {
 
 /* ===== Main Component ===== */
 export default function LabelScanner({ onBrewSaved }) {
-  // Restore from sessionStorage so switching tabs doesn't lose progress
-  const saved = loadSession()
+  const [saved] = useState(loadSession)
   const [step, setStep]                   = useState(saved?.step ?? 'upload')
-  const [preview, setPreview]             = useState(saved?.preview ?? null)
+  const [image, setImage]                 = useState(null)   // PreparedImage, kept in memory
   const [previewFailed, setPreviewFailed] = useState(false)
-  const [pendingFile, setPendingFile]     = useState(null)
-  const [result, setResult]               = useState(saved?.result ?? null)
+  const [scan, setScan]                   = useState(saved?.scan ?? null)
+  const [form, setForm]                   = useState(saved?.form ?? EMPTY_FORM)
   const [coffeeDose, setCoffeeDose]       = useState(saved?.coffeeDose ?? 15)
+  const [flavorProfile, setFlavorProfile] = useState(saved?.flavorProfile ?? EMPTY_FLAVOR)
+  const [outcome, setOutcome]             = useState(saved?.outcome ?? null) // { recipe, fallback, reason }
+  const [saveState, setSaveState]         = useState(saved?.saveState ?? null) // 'saved' | error message
   const [error, setError]                 = useState(null)
-  const [saving, setSaving]               = useState(false)  // prevent double-save
-  const [recipeLoading, setRecipeLoading] = useState(false)  // AI recipe generation in progress
-  const [flavorProfile, setFlavorProfile] = useState(saved?.flavorProfile ?? { taste: null, body: null, acidity: null })
+  const [scanFailed, setScanFailed]       = useState(false)
+  const [preparing, setPreparing]         = useState(false)
+  const [busy, setBusy]                   = useState(false)
   const fileInputRef   = useRef(null)
   const cameraInputRef = useRef(null)
 
-  // Persist step + result + preview + dose + flavor to sessionStorage whenever they change
   useEffect(() => {
-    // Don't persist loading states — restore to safe prior step if interrupted
     const stepToSave = step === 'loading' ? 'upload' : step === 'flavor' ? 'confirm' : step
-    persistSession({ step: stepToSave, result, preview, coffeeDose, flavorProfile })
-  }, [step, result, preview, coffeeDose, flavorProfile])
+    persistSession({ step: stepToSave, scan, form, coffeeDose, flavorProfile, outcome, saveState })
+  }, [step, scan, form, coffeeDose, flavorProfile, outcome, saveState])
+
+  useEffect(() => () => { if (image) URL.revokeObjectURL(image.previewUrl) }, [image])
 
   async function handleFileSelect(file) {
     if (!file) return
-    if (!isImageFile(file)) {
-      setError('Please upload an image file (JPEG, PNG, WEBP, HEIC, etc.)')
-      return
-    }
-    const sizeMB = file.size / (1024 * 1024)
-    if (sizeMB > MAX_FILE_MB) {
-      setError(`Photo is too large (${sizeMB.toFixed(1)} MB). Please use a photo under ${MAX_FILE_MB} MB.`)
-      return
-    }
+    const reason = rejectReason(file)
+    if (reason) { setError(reason); return }
     setError(null)
+    setScanFailed(false)
     setPreviewFailed(false)
-    setPendingFile(file)
-    // Generate a compressed preview instead of reading the full-size file
-    const thumbUrl = await createPreviewUrl(file)
-    setPreview(thumbUrl)
+    setPreparing(true)
+    try {
+      setImage(await prepareImage(file))
+    } catch (e) {
+      setError(e.message)
+      setScanFailed(true)
+    } finally {
+      setPreparing(false)
+    }
   }
 
   async function handleGo() {
-    if (!pendingFile) return
+    if (!image) return
     setError(null)
+    setScanFailed(false)
     setStep('loading')
-    try {
-      const { base64, mimeType } = await resizeImageForApi(pendingFile)
-      const labelData  = await analyzeCoffeeLabel(base64, mimeType)
-      // Store label data without brew guide — guide is generated after user picks dose
-      setResult(labelData)
-      setCoffeeDose(getDefaultDose(labelData))
+    const res = await scanLabel(image.api)
+    if (res.ok) {
+      setScan(res.scan)
+      setForm(formFromScan(res.scan))
+      setCoffeeDose(defaultDose({ originCountry: res.scan.fields.originCountry }))
       setStep('confirm')
-    } catch (e) {
-      setError(e.message)
+    } else {
+      // CAP-08: no dead ends. Keep the photo; offer retry and manual entry.
+      setError(res.message)
+      setScanFailed(true)
       setStep('upload')
     }
   }
 
-  function handleNext() {
-    if (!result) return
-    setStep('flavor')
+  function handleManual() {
+    setError(null)
+    setScan(null)
+    setForm(EMPTY_FORM)
+    setCoffeeDose(15)
+    setStep('confirm')
   }
 
   async function handleGenerate() {
-    if (saving) return
-    setSaving(true)
-    setRecipeLoading(true)
-
-    let brewGuide
+    if (busy) return
+    setBusy(true)
+    const result = await getRecipe({ bean: attributesFromForm(form), doseG: coffeeDose, preferences: flavorProfile })
+    let state = 'saved'
     try {
-      brewGuide = await generateBrewRecipe(result, coffeeDose, flavorProfile)
-    } catch (e) {
-      console.warn('AI recipe failed, falling back to algorithmic guide:', e.message)
-      brewGuide = generateBrewGuide(result, coffeeDose)
-    }
-
-    setRecipeLoading(false)
-
-    const coffeeData = { ...result, brewGuide }
-    try {
-      saveToJournal(coffeeData, preview)
+      await saveScannedBrew({ bean: beanDraftFromForm(form, scan), recipe: result.recipe, photo: image?.photo ?? null })
       onBrewSaved()
     } catch (e) {
-      console.warn('Could not save to journal:', e.message)
+      state = e.name === 'StorageFullError' ? e.message : 'This brew could not be saved to your journal. Your recipe is below.'
     }
-    setResult(coffeeData)
+    setOutcome(result)
+    setSaveState(state)
     setStep('recipe')
-    setSaving(false)
+    setBusy(false)
   }
 
   function handleReset() {
-    setStep('upload'); setPreview(null); setPreviewFailed(false)
-    setPendingFile(null); setResult(null); setError(null); setSaving(false); setCoffeeDose(15)
-    setFlavorProfile({ taste: null, body: null, acidity: null })
+    setStep('upload'); setImage(null); setPreviewFailed(false)
+    setScan(null); setForm(EMPTY_FORM); setError(null); setScanFailed(false); setBusy(false); setCoffeeDose(15)
+    setFlavorProfile(EMPTY_FLAVOR); setOutcome(null); setSaveState(null)
     clearSession()
     if (fileInputRef.current)   fileInputRef.current.value = ''
     if (cameraInputRef.current) cameraInputRef.current.value = ''
   }
 
   const progressStep = step === 'recipe' ? 4 : step === 'flavor' ? 3 : step === 'confirm' ? 2 : 1
+  const preview = image?.previewUrl ?? null
 
   return (
     <section className="scanner-section">
@@ -408,7 +172,7 @@ export default function LabelScanner({ onBrewSaved }) {
       {/* STEP 1 — Upload */}
       {step === 'upload' && (
         <>
-          {!preview ? (
+          {!image ? (
             <div className="upload-area">
               <div className="upload-orb-area">
                 {/* 3D holographic coffee bean */}
@@ -457,25 +221,26 @@ export default function LabelScanner({ onBrewSaved }) {
                 <p className="upload-hint">
                   Point your camera at a coffee bag label or upload a photo.
                   <br />
-                  <span className="upload-hint-small">AI will extract details and build your brew guide.</span>
+                  <span className="upload-hint-small">BrewMap reads the details and builds your V60 recipe.</span>
                 </p>
               </div>
               <div className="upload-action-row">
                 <span className="upload-action-label">Choose an option</span>
                 <div className="upload-btn-row">
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.35rem' }}>
-                    <button className="btn-circle primary" onClick={() => cameraInputRef.current?.click()}>
+                    <button className="btn-circle primary" aria-label="Take a photo" onClick={() => cameraInputRef.current?.click()}>
                       <IconCamera size={22} />
                     </button>
                     <span style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase' }}>Camera</span>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.35rem' }}>
-                    <button className="btn-circle" onClick={() => fileInputRef.current?.click()}>
+                    <button className="btn-circle" aria-label="Upload a photo" onClick={() => fileInputRef.current?.click()}>
                       <IconUpload size={20} />
                     </button>
                     <span style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase' }}>Upload</span>
                   </div>
                 </div>
+                <button className="btn-link" onClick={handleManual}>No photo? Type the details in</button>
               </div>
             </div>
           ) : (
@@ -483,8 +248,7 @@ export default function LabelScanner({ onBrewSaved }) {
               {previewFailed ? (
                 <div className="preview-placeholder">
                   <IconCamera size={36} style={{ color: 'var(--text-secondary)', opacity: 0.4 }} />
-                  <p>{pendingFile?.name ?? 'Image selected'}</p>
-                  <p className="preview-placeholder-hint">Preview unavailable — tap Analyse to continue</p>
+                  <p className="preview-placeholder-hint">Preview unavailable. Tap Analyse to continue.</p>
                 </div>
               ) : (
                 <img src={preview} alt="Coffee label preview" className="label-preview"
@@ -492,23 +256,34 @@ export default function LabelScanner({ onBrewSaved }) {
               )}
               <div className="preview-footer">
                 <button className="btn-go" onClick={handleGo}>
-                  Analyse Label <IconArrowRight size={16} />
+                  {scanFailed ? 'Try again' : 'Analyse label'} <IconArrowRight size={16} />
                 </button>
-                <button className="btn-secondary" onClick={handleReset}>
-                  <IconRefresh size={15} /> Retake
-                </button>
+                {scanFailed ? (
+                  <button className="btn-secondary" onClick={handleManual}>Type the details in</button>
+                ) : (
+                  <button className="btn-secondary" onClick={handleReset}>
+                    <IconRefresh size={15} /> Retake
+                  </button>
+                )}
               </div>
             </div>
           )}
 
           <input ref={cameraInputRef} type="file" accept="image/*" capture="environment"
-            className="sr-only" onChange={e => handleFileSelect(e.target.files?.[0])} />
+            className="sr-only" aria-label="Take a photo of the label" onChange={e => handleFileSelect(e.target.files?.[0])} />
           <input ref={fileInputRef} type="file" accept="image/*"
-            className="sr-only" onChange={e => handleFileSelect(e.target.files?.[0])} />
+            className="sr-only" aria-label="Choose a photo of the label" onChange={e => handleFileSelect(e.target.files?.[0])} />
         </>
       )}
 
-      {/* LOADING — OCR analysis */}
+      {preparing && (
+        <div className="spinner-wrap card">
+          <div className="spinner" />
+          <p className="spinner-label">Preparing the photo…</p>
+        </div>
+      )}
+
+      {/* LOADING — label reading */}
       {step === 'loading' && (
         <div className="spinner-wrap card">
           <div className="spinner" />
@@ -519,39 +294,49 @@ export default function LabelScanner({ onBrewSaved }) {
         </div>
       )}
 
-      {/* LOADING — AI recipe generation */}
-      {recipeLoading && (
+      {/* LOADING — recipe */}
+      {busy && (
         <div className="spinner-wrap card">
           <div className="spinner" />
           <p className="spinner-label">
-            Crafting your recipe…<br />
-            <span style={{ fontSize: '0.8rem' }}>AI is dialling in the parameters</span>
+            Building your recipe…<br />
+            <span style={{ fontSize: '0.8rem' }}>Dialling in the parameters</span>
           </p>
         </div>
       )}
 
-      {error && <div className="error-box">{error}</div>}
+      {error && (
+        <div className="error-box" role="alert">
+          {error}
+          {scanFailed && !image && (
+            <div className="error-actions">
+              <button className="btn-secondary" onClick={handleManual}>Type the details in</button>
+            </div>
+          )}
+        </div>
+      )}
 
-      {/* STEP 2 — Confirm + dose picker */}
-      {step === 'confirm' && result && !recipeLoading && (
-        <ConfirmCard data={result} preview={preview} onNext={handleNext} onReset={handleReset} saving={saving}
+      {/* STEP 2 — Confirm and edit, choose a dose */}
+      {step === 'confirm' && !busy && (
+        <ConfirmCard scan={scan} form={form} setForm={setForm} preview={preview}
+          onNext={() => setStep('flavor')} onReset={handleReset}
           coffeeDose={coffeeDose} setCoffeeDose={setCoffeeDose} />
       )}
 
       {/* STEP 3 — Flavor profile */}
-      {step === 'flavor' && !recipeLoading && (
+      {step === 'flavor' && !busy && (
         <FlavorCard
           flavorProfile={flavorProfile}
           setFlavorProfile={setFlavorProfile}
           onGenerate={handleGenerate}
           onBack={() => setStep('confirm')}
-          saving={saving}
+          busy={busy}
         />
       )}
 
       {/* STEP 4 — Recipe */}
-      {step === 'recipe' && result && (
-        <RecipeCard data={result} preview={preview} onReset={handleReset} />
+      {step === 'recipe' && outcome && (
+        <RecipeCard name={form.name} outcome={outcome} saveState={saveState} preview={preview} onReset={handleReset} />
       )}
 
       <footer className="section-footer">Made by tedb88</footer>
@@ -583,52 +368,96 @@ function labelLanguageHint(code) {
   return `Extracted text was translated to English (detected: ${name}).`
 }
 
-/* ===== Step 2: Confirm ===== */
-function ConfirmCard({ data, preview, onNext, onReset, saving, coffeeDose, setCoffeeDose }) {
-  const { name, origin, region, roastLevel, process, tastingNotes, variety, altitude, labelLanguage } = data
-  const translateHint = labelLanguageHint(labelLanguage)
+const TEXT_FIELDS = [
+  { key: 'name',       label: 'Coffee name', placeholder: 'e.g. Guji Hambela' },
+  { key: 'roaster',    label: 'Roaster' },
+  { key: 'region',     label: 'Region',        placeholder: 'e.g. Yirgacheffe' },
+  { key: 'producer',   label: 'Farm or producer' },
+  { key: 'varieties',  label: 'Varieties',     placeholder: 'e.g. Heirloom, 74110' },
+  { key: 'altitude',   label: 'Altitude',      placeholder: 'e.g. 1,900–2,100 m' },
+  { key: 'labelNotes', label: 'Tasting notes', placeholder: 'e.g. jasmine, peach' },
+  { key: 'netWeightG', label: 'Bag weight (g)', inputMode: 'numeric' },
+]
 
-  const fields = [
-    origin      && { Icon: IconGlobe,    label: 'Origin',        value: origin + (region ? ` · ${region}` : '') },
-    roastLevel  && { Icon: IconFlame,    label: 'Roast',         value: roastLevel },
-    process     && { Icon: IconGear,     label: 'Process',       value: process },
-    variety     && { Icon: IconLeaf,     label: 'Variety',       value: variety },
-    altitude    && { Icon: IconMountain, label: 'Altitude',      value: altitude },
-    tastingNotes?.length > 0 && { Icon: IconSparkle, label: 'Tasting Notes', value: tastingNotes.join(' · ') },
-  ].filter(Boolean)
+function Field({ id, fieldLabel, flag, children }) {
+  return (
+    <li className={`confirm-field edit${flag ? ' flagged' : ''}`}>
+      <div className="confirm-field-body">
+        <label className="confirm-field-label" htmlFor={id}>{fieldLabel}</label>
+        {children}
+        {flag && <span className="field-flag" id={`${id}-flag`}>{flag}</span>}
+      </div>
+    </li>
+  )
+}
+
+/* ===== Step 2: Confirm ===== */
+function ConfirmCard({ scan, form, setForm, preview, onNext, onReset, coffeeDose, setCoffeeDose }) {
+  const translateHint = labelLanguageHint(scan?.labelLanguage)
+  const flags = scan?.flags ?? {}
+  const flagFor = (key) => flags[FORM_TO_SCAN[key]] ?? null
+  const set = (key) => (e) => setForm(prev => ({ ...prev, [key]: e.target.value }))
+  const today = new Date().toISOString().slice(0, 10)
+
+  // The live preview uses the same engine as the recipe (RCP-05).
+  const live = useMemo(() => baselineRecipe({ bean: attributesFromForm(form), doseG: coffeeDose }), [form, coffeeDose])
 
   function handleDoseChange(e) {
     const v = parseInt(e.target.value, 10)
-    if (!isNaN(v) && v >= 1 && v <= 50) setCoffeeDose(v)
+    if (!isNaN(v) && v >= V60.bounds.doseG.min && v <= V60.bounds.doseG.max) setCoffeeDose(v)
   }
 
-  // Compute a live water preview so user sees the effect of their dose choice
-  const originKey = (origin || '').toLowerCase().replace(/\s+/g, '')
-  const procKey = (process || '').toLowerCase().replace(/[\s-]+/g, '')
-  const baseRatio = parseRatio((ORIGIN_PROFILES[originKey] || { ratio: '1:16' }).ratio)
-  const ratioShift = (PROCESS_ADJUSTMENTS[procKey] || PROCESS_ADJUSTMENTS.washed).ratioShift
-  const liveWater = Math.round(coffeeDose * (baseRatio + ratioShift))
+  const fieldProps = (key) => ({
+    id: `bean-${key}`,
+    className: `field-input${flagFor(key) ? ' flagged' : ''}`,
+    value: form[key],
+    onChange: set(key),
+    'aria-describedby': flagFor(key) ? `bean-${key}-flag` : undefined,
+  })
 
   return (
     <article className="confirm-card card" style={{ animation: 'fadeUp 0.22s ease both' }}>
       <div className="confirm-header">
-        {preview && <img src={preview} alt={name} className="confirm-thumb" />}
+        {preview && <img src={preview} alt="" className="confirm-thumb" />}
         <div className="confirm-header-text">
-          <span className="confirm-extracted-tag">Extracted from label</span>
+          <span className="confirm-extracted-tag">{scan ? 'Extracted from label · check and edit' : 'Enter the details from the bag'}</span>
           {translateHint && <p className="confirm-translate-hint">{translateHint}</p>}
-          <h2 className="confirm-name">{name || 'Unknown Coffee'}</h2>
+          <h2 className="confirm-name">{form.name || (scan ? 'Unknown coffee' : 'New coffee')}</h2>
         </div>
       </div>
 
       <ul className="confirm-fields">
-        {fields.map(({ Icon, label, value }) => (
-          <li key={label} className="confirm-field">
-            <span className="confirm-field-icon"><Icon size={14} /></span>
-            <div className="confirm-field-body">
-              <span className="confirm-field-label">{label}</span>
-              <span className="confirm-field-value">{value}</span>
-            </div>
-          </li>
+        <Field id="bean-name" fieldLabel="Coffee name" flag={flagFor('name')}>
+          <input type="text" maxLength={120} placeholder="e.g. Guji Hambela" {...fieldProps('name')} />
+        </Field>
+        <Field id="bean-roaster" fieldLabel="Roaster" flag={flagFor('roaster')}>
+          <input type="text" maxLength={120} {...fieldProps('roaster')} />
+        </Field>
+        <Field id="bean-originCountry" fieldLabel="Origin country" flag={flagFor('originCountry')}>
+          <select {...fieldProps('originCountry')}>
+            <option value="">Not sure</option>
+            {COUNTRY_OPTIONS.map(c => <option key={c.code} value={c.code}>{c.name}</option>)}
+          </select>
+        </Field>
+        <Field id="bean-process" fieldLabel="Process" flag={flagFor('process')}>
+          <select {...fieldProps('process')}>
+            <option value="">Not sure</option>
+            {PROCESSES.map(p => <option key={p} value={p}>{label(p)}</option>)}
+          </select>
+        </Field>
+        <Field id="bean-roastLevel" fieldLabel="Roast level" flag={flagFor('roastLevel')}>
+          <select {...fieldProps('roastLevel')}>
+            <option value="">Not sure</option>
+            {ROAST_LEVELS.map(r => <option key={r} value={r}>{label(r)}</option>)}
+          </select>
+        </Field>
+        <Field id="bean-roastDate" fieldLabel="Roast date" flag={flagFor('roastDate')}>
+          <input type="date" max={today} {...fieldProps('roastDate')} />
+        </Field>
+        {TEXT_FIELDS.slice(2).map(f => (
+          <Field key={f.key} id={`bean-${f.key}`} fieldLabel={f.label} flag={flagFor(f.key)}>
+            <input type="text" maxLength={f.key === 'labelNotes' ? 300 : 120} placeholder={f.placeholder} inputMode={f.inputMode} {...fieldProps(f.key)} />
+          </Field>
         ))}
       </ul>
 
@@ -656,35 +485,37 @@ function ConfirmCard({ data, preview, onNext, onReset, saving, coffeeDose, setCo
           <div className="dose-slider-wrap">
             <input
               type="range"
-              min="8"
-              max="40"
+              min={V60.bounds.doseG.min}
+              max={V60.bounds.doseG.max}
               step="1"
               value={coffeeDose}
               onChange={handleDoseChange}
               className="dose-slider"
+              aria-label="Coffee dose in grams"
             />
           </div>
           <div className="dose-display">
             <input
               type="number"
-              min="1"
-              max="50"
+              min={V60.bounds.doseG.min}
+              max={V60.bounds.doseG.max}
               value={coffeeDose}
               onChange={handleDoseChange}
               className="dose-input"
+              aria-label="Coffee dose in grams"
             />
             <span className="dose-unit">g</span>
           </div>
         </div>
 
         <p className="dose-water-preview">
-          <IconDroplet size={12} /> {liveWater}ml water (1:{baseRatio + ratioShift} ratio)
+          <IconDroplet size={12} /> {live.waterG} g water (1:{live.ratio} ratio)
         </p>
       </div>
 
       <div className="confirm-footer">
         <div className="confirm-actions">
-          <button className="btn-primary" onClick={onNext} disabled={saving}>
+          <button className="btn-primary" onClick={onNext}>
             Customize <IconArrowRight size={15} />
           </button>
           <button className="btn-secondary" onClick={onReset}>
@@ -697,15 +528,17 @@ function ConfirmCard({ data, preview, onNext, onReset, saving, coffeeDose, setCo
 }
 
 /* ===== Step 3: Flavor Profile ===== */
+const poursHint = (taste) => `${POURS_BY_TASTE[taste]} pours`
+
 const FLAVOR_SECTIONS = [
   {
     key: 'taste',
     label: 'Taste profile',
     options: [
-      { value: 'fruity',     label: 'Fruity',          hint: '4–6 pours' },
-      { value: 'floral',     label: 'Floral',          hint: '4–6 pours' },
-      { value: 'chocolatey', label: 'Chocolatey/Nutty', hint: '3–4 pours' },
-      { value: 'balanced',   label: 'Balanced',        hint: '3–4 pours' },
+      { value: 'fruity',     label: 'Fruity',           hint: poursHint('fruity') },
+      { value: 'floral',     label: 'Floral',           hint: poursHint('floral') },
+      { value: 'chocolatey', label: 'Chocolatey/Nutty', hint: poursHint('chocolatey') },
+      { value: 'balanced',   label: 'Balanced',         hint: poursHint('balanced') },
     ],
   },
   {
@@ -729,7 +562,7 @@ const FLAVOR_SECTIONS = [
   },
 ]
 
-function FlavorCard({ flavorProfile, setFlavorProfile, onGenerate, onBack, saving }) {
+function FlavorCard({ flavorProfile, setFlavorProfile, onGenerate, onBack, busy }) {
   function toggle(key, value) {
     setFlavorProfile(prev => ({ ...prev, [key]: prev[key] === value ? null : value }))
   }
@@ -741,14 +574,15 @@ function FlavorCard({ flavorProfile, setFlavorProfile, onGenerate, onBack, savin
         <p className="flavor-card-sub">All optional — skip any you don't mind</p>
       </div>
 
-      {FLAVOR_SECTIONS.map(({ key, label, options }) => (
-        <div key={key} className="flavor-section">
-          <p className="flavor-section-label">{label}</p>
+      {FLAVOR_SECTIONS.map(({ key, label: sectionLabel, options }) => (
+        <div key={key} className="flavor-section" role="group" aria-label={sectionLabel}>
+          <p className="flavor-section-label">{sectionLabel}</p>
           <div className="flavor-options">
             {options.map(({ value, label: optLabel, hint }) => (
               <button
                 key={value}
                 className={`flavor-btn${flavorProfile[key] === value ? ' active' : ''}`}
+                aria-pressed={flavorProfile[key] === value}
                 onClick={() => toggle(key, value)}
               >
                 {optLabel}
@@ -761,7 +595,7 @@ function FlavorCard({ flavorProfile, setFlavorProfile, onGenerate, onBack, savin
 
       <div className="flavor-footer">
         <div className="confirm-actions">
-          <button className="btn-primary" onClick={onGenerate} disabled={saving}>
+          <button className="btn-primary" onClick={onGenerate} disabled={busy}>
             Generate recipe <IconArrowRight size={15} />
           </button>
           <button className="btn-secondary" onClick={onBack}>
@@ -774,70 +608,72 @@ function FlavorCard({ flavorProfile, setFlavorProfile, onGenerate, onBack, savin
 }
 
 /* ===== Step 4: Recipe ===== */
-function RecipeCard({ data, preview, onReset }) {
-  const { name, brewGuide } = data
+function RecipeCard({ name, outcome, saveState, preview, onReset }) {
+  const brewGuide = formatRecipe(outcome.recipe)
 
   return (
     <article className="brew-guide-card card" style={{ animation: 'fadeUp 0.22s ease both' }}>
       <div className="brew-guide-header">
-        {preview && <img src={preview} alt={name} className="brew-guide-thumb" />}
+        {preview && <img src={preview} alt="" className="brew-guide-thumb" />}
         <div className="brew-guide-meta">
-          <div className="saved-inline-badge"><IconCheck size={12} /> Saved to Journal</div>
-          <h2 className="brew-guide-name">{name || 'Unknown Coffee'}</h2>
+          {saveState === 'saved'
+            ? <div className="saved-inline-badge"><IconCheck size={12} /> Saved to Journal</div>
+            : <div className="save-error" role="alert">{saveState}</div>}
+          <h2 className="brew-guide-name">{name || 'Unnamed coffee'}</h2>
           <p className="brew-recipe-subtitle">Your personalised pour-over guide</p>
         </div>
       </div>
 
-      {brewGuide && (
-        <div className="brew-guide-body">
-          <h3 className="brew-section-title">Hand-Drip Brew Guide</h3>
+      <div className="brew-guide-body">
+        <h3 className="brew-section-title">V60 Brew Guide</h3>
 
-          <div className="brew-params">
-            {[
-              { Icon: IconScale,       label: 'Coffee',     value: brewGuide.coffeeAmount },
-              { Icon: IconDroplet,     label: 'Water',      value: brewGuide.waterAmount },
-              { Icon: IconRuler,       label: 'Ratio',      value: brewGuide.ratio },
-              { Icon: IconThermometer, label: 'Temp',       value: brewGuide.waterTemp },
-              { Icon: IconGrid,        label: 'Grind',      value: brewGuide.grindSize },
-              { Icon: IconClock,       label: 'Total Time', value: brewGuide.totalTime },
-            ].map(({ Icon, label, value }) => value ? (
-              <div key={label} className="brew-param">
-                <span className="brew-param-icon"><Icon size={15} /></span>
-                <span className="brew-param-label">{label}</span>
-                <span className="brew-param-value">{value}</span>
-              </div>
-            ) : null)}
-          </div>
+        {outcome.fallback && <p className="recipe-source-note">{fallbackMessage(outcome.reason)}</p>}
 
-          {brewGuide.steps?.length > 0 && (
-            <div className="pour-steps">
-              <h4 className="pour-steps-title">Pour Steps</h4>
-              <ol className="steps-list">
-                {brewGuide.steps.map((s, i) => (
-                  <li key={i} className="step-item">
-                    <div className="step-header">
-                      <span className="step-number">{i + 1}</span>
-                      <span className="step-name">{s.name}</span>
-                      <span className="step-meta">
-                        {s.water     && <span className="step-water"><IconDroplet size={11} /> {s.water}</span>}
-                        {s.waitUntil && <span className="step-time"><IconClock size={11} /> until {s.waitUntil}</span>}
-                      </span>
-                    </div>
-                    {s.notes && <p className="step-notes">{s.notes}</p>}
-                  </li>
-                ))}
-              </ol>
+        <div className="brew-params">
+          {[
+            { Icon: IconScale,       label: 'Coffee',     value: brewGuide.coffeeAmount },
+            { Icon: IconDroplet,     label: 'Water',      value: brewGuide.waterAmount },
+            { Icon: IconRuler,       label: 'Ratio',      value: brewGuide.ratio },
+            { Icon: IconThermometer, label: 'Temp',       value: brewGuide.waterTemp },
+            { Icon: IconGrid,        label: 'Grind',      value: brewGuide.grindSize },
+            { Icon: IconClock,       label: 'Total Time', value: brewGuide.totalTime },
+          ].map(({ Icon, label: paramLabel, value }) => value ? (
+            <div key={paramLabel} className="brew-param">
+              <span className="brew-param-icon"><Icon size={15} /></span>
+              <span className="brew-param-label">{paramLabel}</span>
+              <span className="brew-param-value">{value}</span>
             </div>
-          )}
-
-          {brewGuide.tips && (
-            <div className="brew-tip">
-              <span className="brew-tip-icon"><IconLightbulb size={15} /></span>
-              <span>{brewGuide.tips}</span>
-            </div>
-          )}
+          ) : null)}
         </div>
-      )}
+
+        {brewGuide.steps.length > 0 && (
+          <div className="pour-steps">
+            <h4 className="pour-steps-title">Pour Steps</h4>
+            <ol className="steps-list">
+              {brewGuide.steps.map((s, i) => (
+                <li key={i} className="step-item">
+                  <div className="step-header">
+                    <span className="step-number">{i + 1}</span>
+                    <span className="step-name">{s.name}</span>
+                    <span className="step-meta">
+                      {s.water     && <span className="step-water"><IconDroplet size={11} /> {s.water}</span>}
+                      {s.waitUntil && <span className="step-time"><IconClock size={11} /> until {s.waitUntil}</span>}
+                    </span>
+                  </div>
+                  {s.notes && <p className="step-notes">{s.notes}</p>}
+                </li>
+              ))}
+            </ol>
+          </div>
+        )}
+
+        {brewGuide.tips && (
+          <div className="brew-tip">
+            <span className="brew-tip-icon"><IconLightbulb size={15} /></span>
+            <span>{brewGuide.tips}</span>
+          </div>
+        )}
+      </div>
 
       <div className="brew-guide-actions">
         <button className="btn-secondary" onClick={onReset}>

@@ -1,92 +1,84 @@
-# ☕ BrewMap
+# BrewMap
 
-> Snap a coffee bag. Get a perfect brew recipe. Log your journey.
+Scan a coffee bag, get a V60 recipe built for that coffee, and keep a journal and origin map of what you brew. Mobile-first web app for home brewers in Hong Kong.
 
-BrewMap is a mobile-first web app for specialty coffee lovers. Point your camera at any coffee label, and BrewMap extracts the origin, process, and roast details — then generates a tailored pour-over recipe just for you. Every brew you make gets logged to your personal journal and pinned on a live world map.
+**Status: v0.2.0, release R0 (Foundation).** R0 makes the prototype safe and solid: one rules engine, guaranteed-valid recipes, on-device storage with migration, abuse and spend protection, an AI gateway for open-weight models, tests, CI and an eval harness. The redesigned screens arrive in R1 (see [docs/UX_DESIGN.md](docs/UX_DESIGN.md)).
 
----
+## Documents (read these first)
 
-## ✨ Features
-
-### 📸 Smart Label Scanner
-Upload a photo of any coffee bag and let AI do the reading. BrewMap uses **Llama 4 Scout** (via Groq) to extract:
-- Coffee name & brand
-- Origin country & region
-- Roast level & processing method
-- Tasting notes, variety, and altitude
-
-A clean 3-step flow walks you through the scan:
-1. **Upload** — preview your photo before analysing
-2. **Confirm** — review the extracted details
-3. **Recipe** — get a personalised pour-over guide
-
-### 📖 Brew Journal
-Every coffee you scan is saved to your personal journal. Flip through your history, revisit tasting notes, and track how your palate evolves over time.
-
-### 🗺️ World Map
-Watch your coffee world grow. Each origin you scan drops a pin on an interactive map — a beautiful visual record of every country your beans have come from.
-
----
-
-## 🚀 Getting Started
-
-### Prerequisites
-- Node.js 18+
-- A free [Groq API key](https://console.groq.com) (takes 30 seconds to create)
-
-### Installation
-
-```bash
-git clone https://github.com/tedb88/coffee-journal-app.git
-cd coffee-journal-app
-npm install
-```
-
-### Configuration
-
-Copy the example env file and add your Groq key:
-
-```bash
-cp .env.example .env
-```
-
-```env
-VITE_GROQ_API_KEY=your_groq_api_key_here
-```
-
-### Run
-
-```bash
-npm run dev
-```
-
----
-
-## 🛠️ Tech Stack
-
-| Layer | Technology |
+| Document | What it decides |
 |---|---|
-| Framework | React 18 + Vite 5 |
-| Styling | Plain CSS with custom properties |
-| Vision AI | Llama 4 Scout via Groq API |
-| Map | Leaflet.js |
-| Storage | localStorage |
-| Fonts | Syne (headings) + DM Sans (body) |
+| [docs/BRD.md](docs/BRD.md) | Business requirements, with IDs such as `RCP-05` that code and tests cite |
+| [docs/SOLUTION_PLAN.md](docs/SOLUTION_PLAN.md) | Features, AI design, evals, releases and backlog |
+| [docs/UX_DESIGN.md](docs/UX_DESIGN.md) | The key user journey and the design system |
+| [docs/adr/](docs/adr/README.md) | Architecture decisions ADR-01 to ADR-09 |
+| [CHANGELOG.md](CHANGELOG.md) | What changed in each version |
 
----
+## Quick start
 
-## 📱 Design
+Requires Node.js 20 or later.
 
-BrewMap is built mobile-first with a max-width card layout that looks sharp on both phone and desktop. The design uses a blue-to-orange gradient (`#3B82F6 → #F97316`) that nods to the journey from bean to cup.
+```bash
+npm install
+cp .env.example .env     # optional: add AI provider settings
+npm run dev              # app and API on http://localhost:5173
+```
 
----
+With no AI settings the app still works end to end: label reading offers manual entry, and recipes come from the on-device rules engine. Add an `AI_*` provider to `.env` to use AI locally; the dev server runs the same API code as Vercel, and keys stay on the server.
 
-## 🔒 Privacy
+## Configuration
 
-All your brew data stays on your device — nothing is sent to any server except the label image (analysed by Groq's API) and your API key never leaves your local `.env` file.
+All settings are server-side except `VITE_TURNSTILE_SITE_KEY`. See [.env.example](.env.example).
 
----
+| Setting | Purpose |
+|---|---|
+| `AI_BASE_URL`, `AI_API_KEY`, `AI_SCAN_MODEL`, `AI_RECIPE_MODEL` | Primary OpenAI-compatible provider. Open-weight models only; others are rejected at run time (D7, AIP-9). |
+| `AI_PRICE_IN_PER_M`, `AI_PRICE_OUT_PER_M` | Provider prices in US$ per million tokens, for the spend cap |
+| `AI_FALLBACK_*` | Optional failover provider, same names |
+| `GROQ_API_KEY` | Legacy provider, tried last until the model migration (ADR-09). `AI_DISABLE_LEGACY_GROQ=true` switches it off. |
+| `TURNSTILE_SECRET_KEY`, `VITE_TURNSTILE_SITE_KEY` | Cloudflare Turnstile bot check |
+| `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` | Shared counters for rate limits and spend (Vercel KV names also work) |
+| `AI_MONTHLY_CAP_USD` | Monthly AI spend cap; default 20 (D12) |
+| `ALERT_WEBHOOK_URL` | Optional webhook for spend alerts at 50%, 80% and 100% |
+| `ALLOW_UNPROTECTED_AI` | `true` lets AI run in production without Turnstile and Upstash. Not recommended. |
 
-## 📄 License
+> **Production fails closed.** On a Vercel production deployment, AI stays off until Turnstile and Upstash are configured (ADR-06). The app keeps working with manual entry and rules recipes.
 
-MIT — brew freely.
+## Scripts
+
+| Command | What it does |
+|---|---|
+| `npm run dev` | App and API with hot reload |
+| `npm run build` / `npm run preview` | Production build / serve it (no API) |
+| `npm run lint` · `npm run format` · `npm run typecheck` | ESLint · Prettier (new TypeScript code) · TypeScript |
+| `npm test` · `npm run test:coverage` | Unit and integration tests · with coverage thresholds |
+| `npm run e2e` | Playwright journeys on mobile Chromium |
+| `npm run eval:recipes` | Rules engine over the 50-case golden set (the CI gate). Add `-- --ai` to evaluate the configured AI model. |
+| `npm run eval:labels -- --photos DIR` | Vision model over the private label set ([evals/labels/README.md](evals/labels/README.md)) |
+| `npm run check` | Everything CI runs except the end-to-end tests |
+
+## Project structure
+
+```
+src/domain/      Brewing rules, schemas, recipe engine, validator, dial-in advice (shared by app, API, evals)
+src/data/        IndexedDB (Dexie) schema, repositories, legacy migration, export/import
+src/lib/         Client glue: API client, Turnstile, image pipeline, form and journal view models
+src/components/  Current screens (React). Rewritten in R1.
+api/scan.ts      POST /api/scan    — read a label photo (AI-01)
+api/recipe.ts    POST /api/recipe  — personalise a recipe within bounds (AI-02)
+api/_lib/        Protection, AI gateway, provider registry, prompts, routes
+evals/           Eval harness, metrics, recipe golden set, label-set protocol
+e2e/             Playwright journeys
+docs/            BRD, Solution Plan, UX design, ADRs
+```
+
+## Quality gates
+
+CI ([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs on every push and pull request: lint, format check, type check, unit tests with coverage, build, the recipe eval gate, a production dependency audit, and the end-to-end journeys. Pull requests that change prompts, rules or the registry also run a 20-case AI recipe smoke test when the `AI_*` repository secrets are set.
+
+## Deploying
+
+1. In Vercel, set the settings above for Production (and Preview if wanted). Delete the old `VITE_GROQ_API_KEY`: it is no longer used.
+2. Create a Turnstile widget (Cloudflare) and an Upstash Redis database (free tiers are enough).
+3. Deploy, then confirm the functions run in `hkg1` (ADR-07) and that a scan works.
+4. Watch the `ai_call` and `spend_alert` log lines in the Vercel logs.

@@ -1,0 +1,40 @@
+name: AI eval smoke
+
+# Solution Plan §6.4: a change to prompts, rules or the model registry runs a
+# 20-case AI recipe smoke test (a few cents). Needs the AI_* repository
+# secrets; without them the job reports that it was skipped.
+
+on:
+  pull_request:
+    paths:
+      - 'api/_lib/ai/**'
+      - 'api/_lib/routes.ts'
+      - 'src/domain/rules/**'
+      - 'src/domain/recipe/**'
+      - 'evals/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  recipes-ai:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      AI_BASE_URL: ${{ secrets.AI_BASE_URL }}
+      AI_API_KEY: ${{ secrets.AI_API_KEY }}
+      AI_RECIPE_MODEL: ${{ secrets.AI_RECIPE_MODEL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: AI recipe smoke (20 cases)
+        if: env.AI_API_KEY != ''
+        run: npm run eval:recipes -- --ai --limit 20
+      - name: Skipped
+        if: env.AI_API_KEY == ''
+        run: echo "AI_* secrets are not set for this repository, so the AI eval smoke test did not run."
