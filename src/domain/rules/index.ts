@@ -5,7 +5,7 @@
 
 import type { Grind, Process, RoastLevel } from '../enums.js'
 
-export const RULES_VERSION = 'rules-2026.10.1'
+export const RULES_VERSION = 'rules-2026.11.1'
 
 export interface OriginProfile {
   ratio: number
@@ -214,6 +214,20 @@ export const DEFAULT_POURS = 3
 
 /** Freshness windows for filter brewing, in days since roast (BEAN-04). Pending expert review (D9). */
 export const FRESHNESS = { restDays: 7, bestDays: 30 }
+
+/**
+ * BEAN-04: days to rest after roasting and the last day of the best window,
+ * for filter brewing, by roast level. Darker roasts degas faster and fade
+ * sooner. Placeholders until the expert review (D9, UX-4).
+ */
+export const FRESHNESS_WINDOWS: Record<RoastLevel | 'unknown', { restDays: number; bestDays: number }> = {
+  light: { restDays: 7, bestDays: 30 },
+  'medium-light': { restDays: 6, bestDays: 28 },
+  medium: { restDays: 5, bestDays: 25 },
+  'medium-dark': { restDays: 4, bestDays: 21 },
+  dark: { restDays: 3, bestDays: 18 },
+  unknown: { restDays: 7, bestDays: 30 },
+}
 
 /** Very fresh coffee releases more gas: bloom longer. */
 export const FRESH_BLOOM_EXTRA_S = 10

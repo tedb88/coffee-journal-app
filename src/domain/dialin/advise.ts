@@ -2,12 +2,13 @@
 // Strength against extraction, as on the brewing control chart: sour or thin
 // means under-extracted, bitter or harsh means over-extracted.
 
-import { shiftGrind } from '../enums.js'
+import { grindIndex, shiftGrind, type ChangeKind } from '../enums.js'
 import type { Balance, Recipe } from '../schemas.js'
 import { paramsOf, recipeFromParams } from '../recipe/engine.js'
 import type { RecipeParams } from '../recipe/params.js'
+import { V60 } from '../rules/index.js'
 
-export type ChangeKind = 'grind-finer' | 'grind-coarser' | 'hotter' | 'cooler' | 'more-water' | 'more-coffee' | 'none'
+export type { ChangeKind }
 
 export interface Change {
   kind: ChangeKind
@@ -88,7 +89,26 @@ export function advise(input: AdviceInput): Advice {
     ;[primary, secondary] = [secondary, null]
   }
 
+  // Solution Plan §4.7: a change that would leave the method's safe range is
+  // shrunk to what fits, or skipped for the next option.
   const p = paramsOf(recipe)
+  const fittedPrimary = fit(primary, p, clicks !== null)
+  const fittedSecondary = secondary ? fit(secondary, p, clicks !== null) : null
+  if (fittedPrimary) primary = fittedPrimary
+  else if (fittedSecondary) [primary, secondary] = [fittedSecondary, null]
+  else
+    return {
+      primary: { kind: 'none', amount: 0 },
+      secondary: null,
+      keep: false,
+      title: 'This recipe is at its limit',
+      detail: 'No further change inside the V60 range',
+      why: `${why} This recipe is already at the edge of the safe V60 range, so try a different bag or a fresh grind before changing more.`,
+      then: 'Rate it again next time.',
+    }
+  if (secondary && fittedSecondary) secondary = fittedSecondary
+  else secondary = null
+
   return {
     primary,
     secondary,
@@ -97,6 +117,30 @@ export function advise(input: AdviceInput): Advice {
     detail: detailOf(primary, p, clicks),
     why,
     then: secondary ? `Still ${sour ? 'sour' : bitter ? 'bitter' : 'off'} after that? ${thenOf(secondary, p)}` : 'Taste the difference, then rate it again.',
+  }
+}
+
+/** The change, shrunk to stay inside the V60 bounds, or null when none of it fits. */
+function fit(c: Change, p: RecipeParams, byClicks: boolean): Change | null {
+  const b = V60.bounds
+  switch (c.kind) {
+    case 'grind-finer':
+    case 'grind-coarser': {
+      if (byClicks) return c // clicks live outside the recipe; the grinder sets its own limits
+      const room = c.kind === 'grind-finer' ? grindIndex(p.grind) - grindIndex(b.grind.min) : grindIndex(b.grind.max) - grindIndex(p.grind)
+      const amount = Math.min(c.amount, room)
+      return amount > 0 ? { ...c, amount } : null
+    }
+    case 'hotter':
+      return p.tempC + c.amount <= b.tempC.max ? c : null
+    case 'cooler':
+      return p.tempC - c.amount >= b.tempC.min ? c : null
+    case 'more-water':
+      return p.ratio + 1 <= b.ratio.max ? c : null
+    case 'more-coffee':
+      return p.doseG + 1 <= b.doseG.max && Math.round((p.doseG * p.ratio) / (p.doseG + 1)) >= b.ratio.min ? c : null
+    default:
+      return c
   }
 }
 
@@ -155,7 +199,7 @@ function thenOf(c: Change, p: RecipeParams): string {
 }
 
 /** DIAL-03: the next recipe with the primary change applied. Grind clicks live outside the recipe, so a click change keeps the descriptor. */
-export function applyAdvice(recipe: Recipe, advice: Advice, opts: { clicks?: number | null } = {}): Recipe {
+export function applyAdvice(recipe: Recipe, advice: Pick<Advice, 'primary' | 'why'>, opts: { clicks?: number | null } = {}): Recipe {
   const p = paramsOf(recipe)
   const c = advice.primary
   const byClicks = opts.clicks !== null && opts.clicks !== undefined

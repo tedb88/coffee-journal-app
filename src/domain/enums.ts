@@ -20,6 +20,13 @@ export type BeanStatus = (typeof BEAN_STATUSES)[number]
 export const RECIPE_SOURCES = ['ai', 'rules', 'user', 'legacy'] as const
 export type RecipeSource = (typeof RECIPE_SOURCES)[number]
 
+/** The changes the dial-in coach can suggest (DIAL-01). */
+export const CHANGE_KINDS = ['grind-finer', 'grind-coarser', 'hotter', 'cooler', 'more-water', 'more-coffee', 'none'] as const
+export type ChangeKind = (typeof CHANGE_KINDS)[number]
+
+export const FRESHNESS_STATES = ['resting', 'peak', 'fading'] as const
+export type FreshnessState = (typeof FRESHNESS_STATES)[number]
+
 /** "medium-light" → "Medium-light", "wet-hulled" → "Wet-hulled". */
 export function label(value: string | null | undefined): string {
   if (!value) return ''

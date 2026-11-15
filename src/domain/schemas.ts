@@ -2,7 +2,7 @@
 // Units are canonical (DR-02): grams, °C, seconds, metres.
 
 import { z } from 'zod'
-import { BEAN_STATUSES, GRIND_SCALE, METHODS, PROCESSES, RECIPE_SOURCES, ROAST_LEVELS } from './enums.js'
+import { BEAN_STATUSES, CHANGE_KINDS, GRIND_SCALE, METHODS, PROCESSES, RECIPE_SOURCES, ROAST_LEVELS } from './enums.js'
 
 export const ProcessSchema = z.enum(PROCESSES)
 export const RoastLevelSchema = z.enum(ROAST_LEVELS)
@@ -101,6 +101,21 @@ export const BalanceSchema = z.object({
 })
 export type Balance = z.infer<typeof BalanceSchema>
 
+export const ChangeSchema = z.object({ kind: z.enum(CHANGE_KINDS), amount: z.number() })
+
+/** The dial-in suggestion shown when a brew was rated (DIAL-01), kept to track its effect (DIAL-05). */
+export const AdviceRecordSchema = z.object({
+  primary: ChangeSchema,
+  secondary: ChangeSchema.nullable().default(null),
+  title: z.string(),
+  detail: z.string().default(''),
+  why: z.string().default(''),
+  keep: z.boolean().default(false),
+  /** Grinder clicks the brew was made at, when the user recorded them. */
+  clicks: z.number().nullable().default(null),
+})
+export type AdviceRecord = z.infer<typeof AdviceRecordSchema>
+
 export const BrewSchema = z.object({
   id: z.string().min(1),
   beanId: z.string().min(1),
@@ -113,6 +128,11 @@ export const BrewSchema = z.object({
   descriptors: z.array(z.string()).default([]),
   notes: z.string().default(''),
   grindSetting: z.string().max(40).nullable().default(null),
+  /** Brew time as it happened, from the timer or typed in (BRW-07, LOG-01). */
+  actualTimeS: z.number().int().min(0).max(3600).nullable().default(null),
+  advice: AdviceRecordSchema.nullable().default(null),
+  /** The earlier brew whose suggestion this brew applied (DIAL-03, DIAL-05). */
+  appliedFrom: z.string().nullable().default(null),
   legacyId: z.string().nullable().default(null),
 })
 export type Brew = z.infer<typeof BrewSchema>

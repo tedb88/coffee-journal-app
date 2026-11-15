@@ -49,7 +49,15 @@ describe('advise', () => {
 
   it('speaks in grind steps without a grinder setting', () => {
     expect(advise({ rating: 3, balance: { sourBitter: -1, strength: 0 }, recipe }).detail).toBe('medium → medium-fine')
-    expect(advise({ rating: 3, balance: { sourBitter: 2, strength: 0 }, recipe }).title).toBe('Grind 2 steps coarser')
+    // Two steps coarser than medium would leave the V60 range, so the step shrinks to one (Solution Plan §4.7).
+    expect(advise({ rating: 3, balance: { sourBitter: 2, strength: 0 }, recipe }).title).toBe('Grind 1 step coarser')
+    expect(
+      advise({
+        rating: 3,
+        balance: { sourBitter: -2, strength: 0 },
+        recipe: recipeFromParams({ doseG: 15, ratio: 16, tempC: 94, grind: 'medium-coarse', bloomS: 40, totalS: 190, pours: 3 }, { source: 'rules' }),
+      }).title,
+    ).toBe('Grind 2 steps finer')
     expect(advise({ rating: 3, balance: { sourBitter: 1, strength: 0 }, recipe }).then).toMatch(/93 °C/)
     expect(advise({ rating: 3, balance: { sourBitter: 1, strength: -1 }, recipe }).then).toMatch(/16 g/)
     expect(advise({ rating: 3, balance: { sourBitter: -1, strength: 1 }, recipe }).then).toMatch(/1:17, so 255 g/)
@@ -87,5 +95,39 @@ describe('advise', () => {
     expect(applyAdvice(recipe, byClicks, { clicks: 22 }).grind).toBe('medium')
     const keep = advise({ rating: 5, balance: { sourBitter: 0, strength: 0 }, recipe })
     expect(applyAdvice(recipe, keep)).toMatchObject({ tempC: 94, ratio: 16, grind: 'medium' })
+  })
+})
+
+describe('advice stays inside the V60 range (Solution Plan §4.7)', () => {
+  const at = (over: Partial<{ grind: 'medium-fine' | 'medium' | 'medium-coarse'; tempC: number; ratio: number; doseG: number }>) =>
+    recipeFromParams({ doseG: 15, ratio: 16, tempC: 94, grind: 'medium', bloomS: 40, totalS: 190, pours: 3, ...over }, { source: 'rules' })
+
+  it('moves to the secondary when the grind is already at its finest', () => {
+    const a = advise({ rating: 3, balance: { sourBitter: -1, strength: 0 }, recipe: at({ grind: 'medium-fine' }) })
+    expect(a.primary).toEqual({ kind: 'hotter', amount: 1 })
+    expect(a.secondary).toBeNull()
+    expect(applyAdvice(at({ grind: 'medium-fine' }), a).tempC).toBe(95)
+  })
+
+  it('says so when no change fits', () => {
+    const a = advise({ rating: 2, balance: { sourBitter: -1, strength: 0 }, recipe: at({ grind: 'medium-fine', tempC: 96 }) })
+    expect(a).toMatchObject({ primary: { kind: 'none' }, keep: false, title: 'This recipe is at its limit' })
+  })
+
+  it('drops a secondary that would leave the range', () => {
+    const a = advise({ rating: 3, balance: { sourBitter: -1, strength: 1 }, recipe: at({ ratio: 18 }) })
+    expect(a.primary.kind).toBe('grind-finer')
+    expect(a.secondary).toBeNull()
+  })
+
+  it('never produces a next recipe outside the bounds', () => {
+    for (const grind of ['medium-fine', 'medium', 'medium-coarse'] as const)
+      for (const tempC of [86, 90, 96])
+        for (const sb of [-2, -1, 0, 1, 2])
+          for (const st of [-2, -1, 0, 1, 2]) {
+            const r = at({ grind, tempC })
+            const a = advise({ rating: 3, balance: { sourBitter: sb, strength: st }, recipe: r })
+            expect(checkRecipe(applyAdvice(r, a))).toEqual([])
+          }
   })
 })
