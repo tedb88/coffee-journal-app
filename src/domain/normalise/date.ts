@@ -1,13 +1,18 @@
 // Roast dates as printed on bags. Hong Kong reads ambiguous dates day-first
 // (NFR-13); a reading must also be plausible: not in the future and at most a
-// year old.
+// year old. Chinese and Japanese dates mark the year, month and day
+// (2026年11月10日, 令和8年11月10日), so they are never ambiguous.
 
 export interface DateReading {
   iso: string
-  reading: 'iso' | 'day-first' | 'month-first' | 'words'
+  /** "cjk" is 年 月 日 with a Gregorian year; "era" is a Japanese era year (令和). */
+  reading: 'iso' | 'day-first' | 'month-first' | 'words' | 'cjk' | 'era'
   /** True when the numbers could also be read the other way round. */
   ambiguous: boolean
 }
+
+/** 令和 (Reiwa) began on 1 May 2019; 令和元年 is its first year. Earlier eras are too old for a roast date. */
+const REIWA_START = '2019-05-01'
 
 const MONTHS: Record<string, number> = {
   jan: 1,
@@ -52,7 +57,21 @@ export function isPlausibleRoastDate(iso: string, today: Date): boolean {
 
 export function parseRoastDate(text: string | null | undefined, today: Date = new Date()): DateReading | null {
   if (!text) return null
-  const s = text.toLowerCase()
+  const s = text.normalize('NFKC').toLowerCase() // full-width ２０２６年１１月 → 2026年11月
+
+  // A date without a year (11月10日) is not completed: the year would be a guess (AI-01).
+  const era = s.match(/令和\s*(元|\d{1,2})\s*年\s*(\d{1,2})\s*月\s*(\d{1,2})/)
+  if (era) {
+    const v = toIso(2018 + (era[1] === '元' ? 1 : +era[1]), +era[2], +era[3])
+    return v && v >= REIWA_START && isPlausibleRoastDate(v, today) ? { iso: v, reading: 'era', ambiguous: false } : null
+  }
+
+  // (?:^|\D) rather than a lookbehind, which iOS Safari before 16.4 cannot parse.
+  const cjk = s.match(/(?:^|\D)(\d{4}|\d{2})\s*年\s*(\d{1,2})\s*月\s*(\d{1,2})/)
+  if (cjk) {
+    const v = toIso(fullYear(+cjk[1]), +cjk[2], +cjk[3])
+    return v && isPlausibleRoastDate(v, today) ? { iso: v, reading: 'cjk', ambiguous: false } : null
+  }
 
   const iso = s.match(/(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})/)
   if (iso) {

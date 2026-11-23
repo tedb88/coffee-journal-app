@@ -73,11 +73,103 @@ export const COUNTRIES: Country[] = [
   { code: 'US', name: 'United States (Hawaii)', lat: 19.6, lng: -155.5, aliases: ['hawaii', 'hawaiian', 'kona', 'kau'] },
 ]
 
+// Names as printed on Traditional Chinese, Simplified Chinese and Japanese
+// labels, keyed by ISO code so they carry over to the full reference data
+// (MAP-02). The scan prompt asks for English, but models sometimes return the
+// label text as printed; without these the origin is flagged as unmatched
+// (AI-01, CAP-04). Regions are listed only where an English alias above already
+// maps them and the name means one origin. Left out on purpose: 藍山 and
+// ブルーマウンテン (also a blend style) and 摩卡 and モカ (Yemen, Ethiopia or a drink).
+// Taiwan comes before China so that 中国台湾 reads as Taiwan, as "Taiwan, China" does.
+export const CJK_NAMES: Record<string, string[]> = {
+  ET: [
+    '衣索比亞',
+    '衣索匹亞',
+    '埃塞俄比亞',
+    '埃塞俄比亚',
+    'エチオピア',
+    '耶加雪菲',
+    '耶加雪啡',
+    'イルガチェフェ',
+    '西達摩',
+    '西达摩',
+    'シダモ',
+    '古吉',
+    'グジ',
+  ],
+  KE: ['肯亞', '肯雅', '肯尼亞', '肯尼亚', 'ケニア'],
+  CO: ['哥倫比亞', '哥伦比亚', 'コロンビア'],
+  BR: ['巴西', 'ブラジル'],
+  GT: ['瓜地馬拉', '瓜地马拉', '危地馬拉', '危地马拉', 'グアテマラ', '安提瓜', 'アンティグア', '薇薇特南果', 'ウエウエテナンゴ'],
+  HN: ['宏都拉斯', '洪都拉斯', 'ホンジュラス'],
+  MX: ['墨西哥', 'メキシコ'],
+  SV: ['薩爾瓦多', '萨尔瓦多', 'エルサルバドル'],
+  NI: ['尼加拉瓜', 'ニカラグア'],
+  CR: ['哥斯大黎加', '哥斯達黎加', '哥斯达黎加', 'コスタリカ'],
+  PA: ['巴拿馬', '巴拿马', 'パナマ', 'ボケテ'],
+  CU: ['古巴', 'キューバ'],
+  JM: ['牙買加', '牙买加', 'ジャマイカ'],
+  HT: ['海地', 'ハイチ'],
+  DO: ['多明尼加', '多米尼加', 'ドミニカ'],
+  PR: ['波多黎各', 'プエルトリコ'],
+  VE: ['委內瑞拉', '委内瑞拉', 'ベネズエラ'],
+  EC: ['厄瓜多', '厄瓜多爾', '厄瓜多尔', 'エクアドル'],
+  PE: ['秘魯', '秘鲁', 'ペルー'],
+  BO: ['玻利維亞', '玻利维亚', 'ボリビア'],
+  RW: ['盧安達', '盧旺達', '卢旺达', 'ルワンダ'],
+  BI: ['蒲隆地', '布隆迪', 'ブルンジ'],
+  UG: ['烏干達', '乌干达', 'ウガンダ'],
+  TZ: ['坦尚尼亞', '坦桑尼亞', '坦桑尼亚', 'タンザニア', '吉力馬札羅', '乞力馬扎羅', '乞力马扎罗', 'キリマンジャロ'],
+  CD: ['剛果', '刚果', 'コンゴ'],
+  MW: ['馬拉威', '馬拉維', '马拉维', 'マラウイ'],
+  ZM: ['尚比亞', '贊比亞', '赞比亚', 'ザンビア'],
+  ZW: ['辛巴威', '津巴布韋', '津巴布韦', 'ジンバブエ'],
+  CM: ['喀麥隆', '喀麦隆', 'カメルーン'],
+  NG: ['奈及利亞', '尼日利亞', '尼日利亚', 'ナイジェリア'],
+  TG: ['多哥', 'トーゴ'],
+  GH: ['迦納', '加納', '加纳', 'ガーナ'],
+  CI: ['象牙海岸', '科特迪瓦', 'コートジボワール'],
+  MG: ['馬達加斯加', '马达加斯加', 'マダガスカル'],
+  YE: ['葉門', '也門', '也门', 'イエメン'],
+  IN: ['印度', 'インド'],
+  NP: ['尼泊爾', '尼泊尔', 'ネパール'],
+  LK: ['斯里蘭卡', '斯里兰卡', 'スリランカ', '錫蘭', '锡兰', 'セイロン'],
+  MM: ['緬甸', '缅甸', 'ミャンマー'],
+  TH: ['泰國', '泰国', 'タイ', '清萊', '清莱', 'チェンライ', '清邁', '清迈', 'チェンマイ'],
+  LA: ['寮國', '老撾', '老挝', 'ラオス'],
+  VN: ['越南', 'ベトナム', '大叻', 'ダラット'],
+  TW: ['台灣', '臺灣', '台湾', '阿里山'],
+  CN: ['中國', '中国', '雲南', '云南'],
+  PH: ['菲律賓', '菲律宾', 'フィリピン'],
+  ID: [
+    '印尼',
+    '印度尼西亞',
+    '印度尼西亚',
+    'インドネシア',
+    '蘇門答臘',
+    '苏门答腊',
+    'スマトラ',
+    '爪哇',
+    'ジャワ',
+    '蘇拉威西',
+    '苏拉威西',
+    'スラウェシ',
+    'トラジャ',
+    '峇里',
+    '巴厘',
+    'バリ',
+  ],
+  TL: ['東帝汶', '东帝汶', '東ティモール'],
+  PG: ['巴布亞紐幾內亞', '巴布亞新畿內亞', '巴布亚新几内亚', 'パプアニューギニア'],
+  US: ['夏威夷', 'ハワイ', '科納', '科纳', 'コナ'],
+}
+
 const BY_CODE = new Map(COUNTRIES.map((c) => [c.code, c]))
 
+/** Latin text only. NFKD also turns full-width letters (ＣＯＬＯＭＢＩＡ) into plain ones. */
 function fold(s: string): string {
   return s
-    .normalize('NFD')
+    .normalize('NFKD')
     .replace(/[̀-ͯ]/g, '')
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, ' ')
@@ -88,20 +180,42 @@ const TERMS: Array<{ term: string; country: Country }> = COUNTRIES.flatMap((c) =
   (a, b) => b.term.length - a.term.length,
 ) // longest first: "democratic republic of the congo" before "congo"
 
+// Chinese and Japanese have no spaces between words, so CJK names match
+// anywhere in the text, longest first: 印度尼西亞 before 印度, インドネシア before インド.
+const CJK_TERMS: Array<{ term: string; country: Country; short: boolean }> = Object.entries(CJK_NAMES)
+  .flatMap(([code, names]) => names.map((n) => ({ term: n.normalize('NFKC'), country: BY_CODE.get(code)!, short: /^[ァ-ヿ]{1,2}$/.test(n) })))
+  .sort((a, b) => b.term.length - a.term.length)
+
+const KATAKANA = /[ァ-ヺー-ヿ]/ // katakana letters and ー, but not the ・ separator
+
+/** A two-character katakana name must stand alone, so that スタイル is not タイ and ココナッツ is not コナ. */
+function cjkMatch(text: string, term: string, short: boolean): boolean {
+  if (!short) return text.includes(term)
+  for (let i = text.indexOf(term); i !== -1; i = text.indexOf(term, i + 1)) {
+    if (!KATAKANA.test(text.charAt(i - 1)) && !KATAKANA.test(text.charAt(i + term.length))) return true
+  }
+  return false
+}
+
 export function countryByCode(code: string | null | undefined): Country | null {
   if (!code) return null
   return BY_CODE.get(code.toUpperCase()) ?? null
 }
 
-/** Match free text such as "Ethiopia Yirgacheffe", "Kenya AA" or "Sumatra" to a country. */
+/** Match free text such as "Ethiopia Yirgacheffe", "Kenya AA", "Sumatra", "哥倫比亞" or "エチオピア・グジ" to a country. */
 export function normaliseCountry(raw: string | null | undefined): Country | null {
   if (!raw) return null
   const trimmed = raw.trim()
   if (/^[A-Za-z]{2}$/.test(trimmed)) return countryByCode(trimmed)
-  const text = ` ${fold(trimmed)} `
-  if (text.trim() === '') return null
-  for (const { term, country } of TERMS) {
-    if (text.includes(` ${term} `)) return country
+  const latin = ` ${fold(trimmed)} `
+  if (latin.trim() !== '') {
+    for (const { term, country } of TERMS) {
+      if (latin.includes(` ${term} `)) return country
+    }
+  }
+  const cjk = trimmed.normalize('NFKC') // half-width ｺﾛﾝﾋﾞｱ → コロンビア
+  for (const { term, country, short } of CJK_TERMS) {
+    if (cjkMatch(cjk, term, short)) return country
   }
   return null
 }

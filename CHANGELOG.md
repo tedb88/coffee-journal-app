@@ -2,6 +2,18 @@
 
 All notable changes. Versions follow [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Fixed
+- **Chinese and Japanese labels.** When the vision model returns label text as printed instead of in English, the normaliser now reads it rather than flagging it (AI-01, CAP-04). An origin of "哥倫比亞" with a roast date of "2026年11月10日" now gives Colombia and 10 November 2026 with no flags.
+  - Countries: Traditional Chinese, Simplified Chinese and Japanese names for all 50 supported countries, plus well-known regions that already had English aliases (for example 耶加雪啡, キリマンジャロ, 蘇門答臘). Half-width katakana and full-width letters are read too. Names that point to more than one origin, such as 藍山 (also a blend style) and 摩卡 or モカ, are left out.
+  - Roast dates: 2026年11月10日, 26年11月10日, 令和8年11月10日 (including 令和元年) and full-width digits. These name the year, month and day, so they are not flagged as day-first. A date without a year, such as 11月10日, is still flagged: the year is never guessed.
+  - Process and roast: Chinese and Japanese words such as 水洗, 日曬, 日晒, 蜜處理, 厭氧, 淺焙, 淺中焙, 中焙, 深焙, 浅煎り and 中深煎り.
+
+### Known gaps
+- The label eval (`npm run eval:labels`) has not been run on the photo set for this change, because the photos and ground truth are kept outside the repository. Run it before the next release to confirm the fabrication rate stays at or below 2%.
+- Korean labels (part of the "Korean and others ≥ 10%" share of the eval set) are not covered yet: country names in Hangul and dates written with 년 월 일.
+
 ## [0.3.0] — 2026-11-15 · The redesigned key journey (R1, first cut)
 
 Built from the UX design note v0.1 and the BrewMap design system, on top of R0.

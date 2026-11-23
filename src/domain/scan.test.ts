@@ -1,3 +1,4 @@
+import fc from 'fast-check'
 import { describe, expect, it } from 'vitest'
 import { normaliseScan, parseWeightG, ScanModelOutputSchema, type ScanModelOutput } from './scan.js'
 
@@ -79,6 +80,83 @@ describe('normaliseScan (AI-01)', () => {
   it('tolerates junk confidence values from the model', () => {
     const parsed = ScanModelOutputSchema.parse({ fields: {}, confidence: { name: 'very sure' } })
     expect(parsed.confidence.name).toBe('low')
+  })
+})
+
+describe('normaliseScan with untranslated Chinese and Japanese labels (AI-01, CAP-04)', () => {
+  const NOV = new Date('2026-11-23T03:00:00Z')
+  const cjk = (fields: Record<string, string>) => ScanModelOutputSchema.parse({ fields, evidence: { ...fields } })
+
+  it('reads a Traditional Chinese origin and roast date without flagging them', () => {
+    const r = normaliseScan(cjk({ origin: '哥倫比亞', roastDate: '2026年11月10日', process: '水洗', roastLevel: '淺焙' }), NOV, META)
+    expect(r.fields).toMatchObject({
+      originCountry: 'CO',
+      originName: 'Colombia',
+      originRaw: '哥倫比亞',
+      roastDate: '2026-11-10',
+      process: 'washed',
+      roastLevel: 'light',
+    })
+    expect(r.roastDateReading).toEqual({ iso: '2026-11-10', reading: 'cjk', ambiguous: false })
+    expect(r.flags.origin).toBeUndefined()
+    expect(r.flags.roastDate).toBeUndefined()
+    expect(r.confidence.origin).toBeUndefined()
+    expect(r.confidence.roastDate).toBeUndefined()
+  })
+
+  it('reads a Japanese origin and era date without flagging them', () => {
+    const r = normaliseScan(
+      cjk({ origin: 'エチオピア・イルガチェフェ', roastDate: '令和8年11月10日', process: 'ナチュラル', roastLevel: '中浅煎り' }),
+      NOV,
+      META,
+    )
+    expect(r.fields).toMatchObject({ originCountry: 'ET', roastDate: '2026-11-10', process: 'natural', roastLevel: 'medium-light' })
+    expect(r.flags).toEqual({})
+  })
+
+  it('still flags a date without a year instead of guessing it', () => {
+    const r = normaliseScan(cjk({ origin: '肯亞', roastDate: '11月10日' }), NOV, META)
+    expect(r.fields.originCountry).toBe('KE')
+    expect(r.fields.roastDate).toBeNull()
+    expect(r.flags.roastDate).toMatch(/Could not read "11月10日"/)
+  })
+
+  it('still flags an untranslated value that has no quoted label text (fabrication gate)', () => {
+    const r = normaliseScan(ScanModelOutputSchema.parse({ fields: { origin: '哥倫比亞' }, evidence: {} }), NOV, META)
+    expect(r.confidence.origin).toBe('low')
+    expect(r.flags.origin).toMatch(/Not clearly printed/)
+  })
+
+  // AI-01: a field not printed on the label stays empty. The normaliser only reads text the model
+  // returned; it must never turn an empty field into a value, in any language.
+  it('never fills a field the model left empty', () => {
+    const value = fc.oneof(
+      fc.constantFrom('哥倫比亞', 'エチオピア', 'Kenya AA', '2026年11月10日', '令和8年11月10日', '11月10日', '水洗', '淺焙', '200g', '1,900 m'),
+      fc.string(),
+    )
+    const keys = ['name', 'roaster', 'origin', 'region', 'producer', 'process', 'roastLevel', 'altitude', 'roastDate', 'netWeight'] as const
+    const mapped: Record<(typeof keys)[number], (r: ReturnType<typeof normaliseScan>['fields']) => unknown[]> = {
+      name: (f) => [f.name],
+      roaster: (f) => [f.roaster],
+      origin: (f) => [f.originCountry, f.originName, f.originRaw],
+      region: (f) => [f.region],
+      producer: (f) => [f.producer],
+      process: (f) => [f.process],
+      roastLevel: (f) => [f.roastLevel],
+      altitude: (f) => [f.altitude],
+      roastDate: (f) => [f.roastDate],
+      netWeight: (f) => [f.netWeightG],
+    }
+    fc.assert(
+      fc.property(
+        fc.record(Object.fromEntries(keys.map((k) => [k, fc.option(value, { nil: null })])) as Record<(typeof keys)[number], fc.Arbitrary<string | null>>),
+        (fields) => {
+          const r = normaliseScan(ScanModelOutputSchema.parse({ fields, evidence: { ...fields } }), NOV, META)
+          return keys.filter((k) => fields[k] === null).every((k) => mapped[k](r.fields).every((v) => v === null))
+        },
+      ),
+      { numRuns: 2_000 },
+    )
   })
 })
 
