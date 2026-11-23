@@ -7,6 +7,7 @@ import { formatTime } from '../domain/recipe/format.js'
 import { BeanSchema, BrewSchema } from '../domain/schemas.js'
 import { getDb, guardQuota, SCHEMA_VERSION, type BrewMapDB } from './db.js'
 
+// Kept from the product's first name, so older exports still import.
 export const EXPORT_FORMAT = 'brewmap-export'
 
 const PhotoExportSchema = z.object({ id: z.string(), beanId: z.string().nullable(), type: z.string(), createdAt: z.string(), base64: z.string() })
@@ -57,7 +58,7 @@ export interface ImportResult {
 export async function importAll(data: unknown, db: BrewMapDB = getDb()): Promise<ImportResult> {
   const parsed = ExportSchema.safeParse(data)
   if (!parsed.success) {
-    throw new Error(`This file is not a BrewMap export, or it is damaged: ${parsed.error.issues[0]?.message ?? 'unknown problem'}.`)
+    throw new Error(`This file is not a BrewNext export, or it is damaged: ${parsed.error.issues[0]?.message ?? 'unknown problem'}.`)
   }
   const file = parsed.data
   await guardQuota(() =>

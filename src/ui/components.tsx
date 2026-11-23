@@ -1,4 +1,4 @@
-// BrewMap design system components (the design system's components/bundle.js),
+// BrewNext design system components (the design system's components/bundle.js),
 // in TypeScript for the app. Styling lives in components.css; every value is a token.
 
 import { useEffect, useId, type ButtonHTMLAttributes, type ChangeEventHandler, type ReactNode } from 'react'
@@ -23,7 +23,8 @@ const ICONS: Record<string, Shape[]> = {
   keyboard: [{ rect: [3, 6, 18, 12, 2] }, 'M7 10h1M11 10h1M15 10h1M8 14h8'],
   awake: [{ circle: [12, 12, 4] }, 'M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4'],
   'arrow-down': ['M12 4v16M7 15l5 5 5-5'],
-  mark: ['M3 5h18', 'M5 5l5.5 9h3L19 5', 'M9 18.5h6', 'M12 15.5v1.2'],
+  // The Next handle (BRD D1): a coffee cup whose handle is a forward arrow.
+  mark: ['M3.2 7.8h12.4v2.6a6.2 6.2 0 0 1-12.4 0z', 'M18.4 7.5l3 3.4-3 3.4'],
 }
 export type IconName = keyof typeof ICONS
 const HEAVY = new Set(['back', 'close', 'awake', 'mark'])

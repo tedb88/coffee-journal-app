@@ -1,14 +1,14 @@
-# BrewMap — Business Requirements Document
+# BrewNext — Business Requirements Document
 
 | Field | Value |
 |---|---|
-| Product | BrewMap (working name — see decision D1) |
+| Product | BrewNext (decision D1, 23 November 2026; the working name was BrewMap) |
 | Document | Business Requirements Document (BRD) |
-| Version | 0.3 — Draft for Product Owner review |
-| Date | 23 October 2026 |
+| Version | 0.4 — Draft for Product Owner review |
+| Date | 23 November 2026 |
 | Product Owner | tedb88 |
 | Baseline reviewed | Repository `tedb88/coffee-journal-app` at commit `e74d951` |
-| Status | **Draft.** Decisions D2, D4, D5, D6, D7, D11 and D12 are closed (§14.1). Solution design is in [`SOLUTION_PLAN.md`](SOLUTION_PLAN.md). |
+| Status | **Draft.** Decisions D1, D2, D4, D5, D6, D7, D11 and D12 are closed (§14.1). Solution design is in [`SOLUTION_PLAN.md`](SOLUTION_PLAN.md). |
 
 **Change log**
 
@@ -17,12 +17,13 @@
 | 0.1 | 2026-10-23 | Initial draft, derived from current-state review of the prototype |
 | 0.2 | 2026-10-23 | Closed D2 (Home Enthusiast persona), D4 (Hong Kong), D5 (no accounts in R1), D6 (V60 only in R1) and D7 (open-weight models; multimodal model for label reading). Applied their effects to scope, RCP-01, AI principles (new AIP-9), AI-01, NFR-08, NFR-13, constraints, risks and phasing. Added open decisions D11 (UI language) and D12 (AI spend cap). |
 | 0.3 | 2026-10-23 | Closed D11 (English UI) and D12 (US$20 per month AI spend cap). Updated NFR-13 and NFR-14. |
+| 0.4 | 2026-11-23 | Closed D1: the product is named **BrewNext**, with the "Next handle" mark. Added risk R10 (name clearance). |
 
 ---
 
 ## 1. Executive Summary
 
-**Situation.** BrewMap is a working mobile web prototype. A user photographs a coffee bag, a vision model reads the label, a language model generates a V60 pour-over recipe, and the result is saved to an on-device journal and plotted on a world map. It was built iteratively without written requirements.
+**Situation.** BrewNext (then called BrewMap) is a working mobile web prototype. A user photographs a coffee bag, a vision model reads the label, a language model generates a V60 pour-over recipe, and the result is saved to an on-device journal and plotted on a world map. It was built iteratively without written requirements.
 
 **Complication.** The prototype proves the "scan → recipe" moment but does not yet support repeated, everyday use. Three structural gaps stand out:
 
@@ -82,7 +83,7 @@ This BRD sets the objectives, users, scope, functional, AI, data and non-functio
 
 ## 3. Business Objectives & Success Metrics
 
-**Product vision.** *Every bag, brewed better.* BrewMap helps home brewers get a great cup from any bag on the first try, and a better one each time after.
+**Product vision.** *Every bag, brewed better.* BrewNext helps home brewers get a great cup from any bag on the first try, and a better one each time after.
 
 | ID | Business objective |
 |---|---|
@@ -559,6 +560,7 @@ User ─1───*─ Equipment
 | R7 | Provider lock-in or model deprecation | M | M | AI gateway (AIP-6); evals make a model swap a measured, low-risk change |
 | R8 | Privacy non-compliance at launch, or later when accounts launch | L | H | NFR-08 PDPO checklist as an exit criterion for R1 and again for R2 |
 | R9 | The AI provider is unavailable to Hong Kong customers (C5) | M | H | Migrate to an HK-eligible provider in R0. Configure a second provider for failover. Open weights keep self-hosting available as an exit. |
+| R10 | The name BrewNext turns out to be registered or in use for coffee products in a launch market | L | M | Formal trademark search (Hong Kong first), app store and domain checks before public launch; internal identifiers keep the old name, so a rename touches only what users see |
 
 ---
 
@@ -581,6 +583,7 @@ User ─1───*─ Equipment
 
 | ID | Decision | Outcome | Date | Effect on this BRD |
 |---|---|---|---|---|
+| D1 | Product name and positioning | **BrewNext**: brew, then a better next cup. The mark is a coffee cup whose handle is a forward arrow ("Next handle"). Chosen over BrewMap (the map undersold the dial-in coaching), Bean Sommelier, and names already used in coffee (BrewWISE, CupWise, Pourwise, BrewDial, BrewCue). A quick web screen found no other use of BrewNext; a formal trademark, app store and domain clearance is still due before public launch (R10). | 2026-11-23 | Product name in every document and screen; UX design §3; risk R10 |
 | D2 | Primary persona | **Home brewer: P2 Home Enthusiast**, with P1 still able to succeed | 2026-10-23 | §5.2 |
 | D4 | Launch market | **Hong Kong** | 2026-10-23 | NFR-08 (PDPO), NFR-13 (HK defaults), C5, AI-01 eval languages |
 | D5 | Timing of accounts | **R1 launches without accounts.** Guest mode, on-device data, export and import. Accounts stay planned for R2, to be re-confirmed at the R1 review. | 2026-10-23 | ACC-01 (R1); ACC-02–05 (R2) |
@@ -593,7 +596,6 @@ User ─1───*─ Equipment
 
 | ID | Decision | Options | Recommendation | Needed by |
 |---|---|---|---|---|
-| D1 | Product name and positioning | "BrewMap" / "Bean Sommelier" (the name used in the AI context documents) / a new name | Keep "BrewMap" as the working name, and decide before public launch | R1 launch |
 | D3 | Business model | Free hobby product / freemium (AI usage limits) / subscription / roaster partnerships | Free through R2, with instrumentation in place for freemium (AI usage is a natural premium boundary) | Before R3 |
 | D8 | Platform | PWA / native wrapper (for example Capacitor) / fully native | PWA in R1. Reconsider a wrapper if iOS limits (haptics, storage) block KPIs. | R1 |
 | D9 | Expert reviewer for recipes | Barista or Q Grader contact / community panel | Engage one experienced Hong Kong barista or Q Grader to review the 50-case golden set | Mid-R1 |

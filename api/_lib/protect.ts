@@ -72,7 +72,7 @@ export async function guard(req: ApiRequest, route: Route, deps: Deps): Promise<
 
   if (!(await verifyTurnstile(req.headers['x-turnstile-token'], req.ip, deps))) {
     deps.log({ event: 'bot_check_failed', route })
-    return json(403, { error: 'We could not confirm this request came from the BrewMap app. Reload the page and try again.' })
+    return json(403, { error: 'We could not confirm this request came from the BrewNext app. Reload the page and try again.' })
   }
 
   const key = clientKey(req)
@@ -97,7 +97,7 @@ export async function guard(req: ApiRequest, route: Route, deps: Deps): Promise<
   const global = await deps.kv.incrBy(windowKey('rl:global', 86400, now), 1, 86400)
   if (global > GLOBAL_DAILY_AI_CALLS) {
     deps.log({ event: 'global_limit', route })
-    return json(429, { error: 'BrewMap is very busy today. Try again tomorrow.' })
+    return json(429, { error: 'BrewNext is very busy today. Try again tomorrow.' })
   }
   return null
 }
@@ -137,7 +137,7 @@ export async function recordSpend(costUsd: number, deps: Deps): Promise<void> {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              text: `BrewMap AI spend has reached ${Math.round(level * 100)}% of the US$${cap} monthly cap (US$${spent.toFixed(2)}).`,
+              text: `BrewNext AI spend has reached ${Math.round(level * 100)}% of the US$${cap} monthly cap (US$${spent.toFixed(2)}).`,
               ...alert,
             }),
           })

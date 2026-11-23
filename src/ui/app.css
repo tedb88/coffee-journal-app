@@ -1,4 +1,4 @@
-/* Screen layout for the BrewMap app: one column at phone width (390 px design). */
+/* Screen layout for the BrewNext app: one column at phone width (390 px design). */
 *, *::before, *::after { box-sizing: border-box; }
 html, body, #root { height: 100%; }
 /* The page itself never moves under a finger: no bounce, no pull past the end, no

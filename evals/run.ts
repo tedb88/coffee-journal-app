@@ -1,4 +1,4 @@
-// BrewMap eval harness (Solution Plan §6.4, AIG-01).
+// BrewNext eval harness (Solution Plan §6.4, AIG-01).
 //
 //   npx tsx evals/run.ts recipes            rules engine over the golden set (offline, the CI gate)
 //   npx tsx evals/run.ts recipes --ai       the configured AI recipe model over the golden set

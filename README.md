@@ -1,8 +1,10 @@
-# BrewMap
+# BrewNext
 
-Scan a coffee bag, get a V60 recipe built for that coffee, and keep a journal and origin map of what you brew. Mobile-first web app for home brewers in Hong Kong.
+Scan a coffee bag, get a V60 recipe built for that coffee, brew it with a guided timer, and get one change that makes the next cup better. A mobile-first web app for home brewers in Hong Kong, with a journal and an origin map of what you brew.
 
-**Status: v0.3.3.** R0 (Foundation) made the prototype safe and solid: one rules engine, guaranteed-valid recipes, on-device storage with migration, abuse and spend protection, an AI gateway for open-weight models, tests, CI and an eval harness. v0.3.0 adds the redesigned key journey from [docs/UX_DESIGN.md](docs/UX_DESIGN.md): Today, scan and check, recipe, guided brew, taste with one change for next time, and the bag page, plus Beans, Journal and Map. See [CHANGELOG.md](CHANGELOG.md) for what is still to come.
+BrewNext was called BrewMap while it was first built (BRD decision D1). Internal names such as the on-device database, storage keys and the export format keep `brewmap`, so existing journals and backups keep working.
+
+**Status: v0.4.0.** R0 (Foundation) made the prototype safe and solid: one rules engine, guaranteed-valid recipes, on-device storage with migration, abuse and spend protection, an AI gateway for open-weight models, tests, CI and an eval harness. v0.3.0 adds the redesigned key journey from [docs/UX_DESIGN.md](docs/UX_DESIGN.md): Today, scan and check, recipe, guided brew, taste with one change for next time, and the bag page, plus Beans, Journal and Map. See [CHANGELOG.md](CHANGELOG.md) for what is still to come.
 
 ## Documents (read these first)
 
@@ -65,7 +67,7 @@ All settings are server-side except `VITE_TURNSTILE_SITE_KEY`. See [.env.example
 src/domain/      Brewing rules, schemas, recipe engine, validator, dial-in advice (shared by app, API, evals)
 src/data/        IndexedDB (Dexie) schema, repositories, legacy migration, export/import
 src/lib/         Client glue: API client, Turnstile, image pipeline, form, display and journal helpers
-src/ui/          The BrewMap design system in code: tokens (generated), component styles and components
+src/ui/          The BrewNext design system in code: tokens (generated), component styles and components
 src/app/         App shell, hash routes, and one file per screen in src/app/screens
 api/scan.ts      POST /api/scan    — read a label photo (AI-01)
 api/recipe.ts    POST /api/recipe  — personalise a recipe within bounds (AI-02)

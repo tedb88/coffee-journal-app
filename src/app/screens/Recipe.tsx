@@ -23,7 +23,7 @@ export function attributesOf(bean: Bean): BeanAttributes {
 }
 
 const FALLBACK_TEXT: Record<string, string> = {
-  offline: 'You are offline, so this is BrewMap’s standard recipe for this coffee.',
+  offline: 'You are offline, so this is BrewNext’s standard recipe for this coffee.',
 }
 
 export function RecipeScreen({ beanId }: { beanId: string }) {
@@ -105,7 +105,7 @@ function RecipeView({ bean, plan, brewNumber }: { bean: Bean; plan: NextBrew; br
             title: fallbackReason ? 'Standard recipe' : 'Why this recipe',
             text: [
               fallbackReason
-                ? (FALLBACK_TEXT[fallbackReason] ?? 'AI personalisation is not available right now, so this is BrewMap’s standard recipe for this coffee.')
+                ? (FALLBACK_TEXT[fallbackReason] ?? 'AI personalisation is not available right now, so this is BrewNext’s standard recipe for this coffee.')
                 : null,
               recipe.rationale,
               recipe.expectedCup,

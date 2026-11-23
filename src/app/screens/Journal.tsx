@@ -50,7 +50,7 @@ export function JournalScreen() {
       bump()
       toast(`Imported ${res.beans} ${res.beans === 1 ? 'bag' : 'bags'} and ${res.brews} ${res.brews === 1 ? 'brew' : 'brews'}`)
     } catch (e) {
-      toast(e instanceof SyntaxError ? 'That file is not a BrewMap export.' : (e as Error).message)
+      toast(e instanceof SyntaxError ? 'That file is not a BrewNext export.' : (e as Error).message)
     }
     if (file.current) file.current.value = ''
   }
@@ -184,7 +184,7 @@ export function JournalScreen() {
             className="sr-only"
             type="file"
             accept="application/json,.json"
-            aria-label="Import a BrewMap export"
+            aria-label="Import a BrewNext export"
             tabIndex={-1}
             onChange={(e) => onImport(e.target.files?.[0])}
           />

@@ -2,6 +2,16 @@
 
 All notable changes. Versions follow [Semantic Versioning](https://semver.org/).
 
+## [0.4.0] — 2026-11-23 · BrewNext
+
+### Changed
+- **The product is now BrewNext** (BRD v0.4, decision D1): brew, then a better next cup. Every screen, message, the page title and downloaded file names use the new name.
+- **New mark, the Next handle:** a coffee cup whose handle is a forward arrow, in the header, the favicon (now also lighter in dark mode) and the BrewNext design system. It replaces the V60 cone, which read as a martini glass at small sizes.
+- BRD 0.4, Solution Plan 0.3 and UX design 0.3 record the name and mark. New risk R10: a formal trademark, app store and domain clearance is due before public launch.
+
+### Kept on purpose
+- Internal names stay `brewmap`: the on-device database, the localStorage keys, the export format and the design system's component namespace. Existing journals, settings and backups keep working (DR-05).
+
 ## [0.3.3] — 2026-11-23 · Nothing spills off the bag page
 
 ### Fixed

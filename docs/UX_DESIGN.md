@@ -1,10 +1,10 @@
-# BrewMap — Key Journey UX Design
+# BrewNext — Key Journey UX Design
 
 | Field | Value |
 |---|---|
 | Document | UX design note for the key user journey |
-| Version | 0.2 — Draft for Product Owner review |
-| Date | 23 November 2026 (0.2: the screen stays still under a finger; 0.1: 23 October 2026) |
+| Version | 0.3 — Draft for Product Owner review |
+| Date | 23 November 2026 (0.3: renamed BrewNext with the Next handle mark; 0.2: the screen stays still under a finger; 0.1: 23 October 2026) |
 | Inputs | [`BRD.md`](BRD.md) v0.3 · [`SOLUTION_PLAN.md`](SOLUTION_PLAN.md) v0.2 |
 | Prototype | Design canvas "BrewMap Key Journey": https://claude.ai/artifact/TE2JcqJmbvZwqvHzj9SMPH (private until shared from its Share menu) |
 | Design method | App-screen rules of the `design-taste-frontend` skill (leonxlnx/taste-skill, MIT), read from the upstream repository |
@@ -45,9 +45,9 @@ Three choices drive the design:
 
 ---
 
-## 3. Design system (BrewMap's own)
+## 3. Design system (BrewNext's own)
 
-The full system is published as the **BrewMap design system**: https://claude.ai/artifact/7ohTpUvfi5wAzTFwwnvzta (private until shared). It holds the tokens (light and dark brew mode), the type styles, the icons, 16 live React components and a usage guide. It is the source of truth; the table below is a summary.
+The full system is published as the **BrewNext design system** (made as the BrewMap design system): https://claude.ai/artifact/7ohTpUvfi5wAzTFwwnvzta (private until shared). It holds the tokens (light and dark brew mode), the type styles, the icons, 16 live React components and a usage guide. It is the source of truth; the table below is a summary.
 
 **Where the system differs from the first canvas** (the canvas is to be aligned):
 - Control borders: `#CBCDC7` → `#858884`, so inputs and outline buttons meet 3:1 contrast. Dark theme: `#6E7378`.
@@ -68,6 +68,7 @@ The full system is published as the **BrewMap design system**: https://claude.ai
 | Type | Manrope 400/500/600/700, tabular figures on every number (replaced IBM Plex Sans after review) | One family; sizes 12/13/14/16/20/24, plus 64 on the brew target only |
 | Shape | Cards 20 px radius, buttons and chips fully round, 44 px minimum touch target | One radius family |
 | Layout | 390 px phone design, working from 360 to 430 px; 20 px side margins, bottom nav of 4 (Today, Beans, Journal, Map) | Flow screens use a back button plus a pinned primary action. Only a screen's content scrolls: the page never moves, bounces or slides sideways under a finger, nothing spills out of its card (a word value such as a grind gets its own row), and bars clear the notch and home indicator (safe areas). Checked by `e2e/layout.spec.ts` |
+| Mark and name | Next handle: a coffee cup whose handle is a forward arrow, on the 24 px icon grid, 1.8 px outline in water. Wordmark "BrewNext" in Manrope 600 | 26 px beside the wordmark in the Today header (8 px gap); alone as the favicon and app icon (BRD D1) |
 
 **Rules adopted from the taste skill:**
 - No gradients, glass, glows or emoji.

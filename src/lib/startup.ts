@@ -53,15 +53,15 @@ function download(name: string, text: string, type = 'application/json') {
 export async function downloadLegacyBackup(): Promise<boolean> {
   const backup = await legacyBackup()
   if (!backup) return false
-  download('brewmap-backup-before-upgrade.json', backup.raw)
+  download('brewnext-backup-before-upgrade.json', backup.raw)
   return true
 }
 
 export async function downloadExport(): Promise<void> {
   const data = await exportAll({ includePhotos: false })
-  download(`brewmap-journal-${new Date().toISOString().slice(0, 10)}.json`, JSON.stringify(data, null, 2))
+  download(`brewnext-journal-${new Date().toISOString().slice(0, 10)}.json`, JSON.stringify(data, null, 2))
 }
 
 export async function downloadCsv(): Promise<void> {
-  download(`brewmap-brews-${new Date().toISOString().slice(0, 10)}.csv`, await brewsCsv(), 'text/csv')
+  download(`brewnext-brews-${new Date().toISOString().slice(0, 10)}.csv`, await brewsCsv(), 'text/csv')
 }

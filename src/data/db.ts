@@ -25,6 +25,7 @@ export class BrewMapDB extends Dexie {
   photos!: Table<PhotoRecord, string>
   meta!: Table<MetaRecord, string>
 
+  // The database keeps the product's first name: renaming it would hide every user's data (DR-05).
   constructor(name = 'brewmap') {
     super(name)
     // DR-04: each schema change is a new version with an upgrade; never edit a shipped one.
@@ -64,7 +65,7 @@ export function useDb(db: BrewMapDB | null): void {
 
 export class StorageFullError extends Error {
   constructor() {
-    super('Your phone is out of space for BrewMap. Export your journal or remove some photos, then try again. Nothing was deleted.')
+    super('Your phone is out of space for BrewNext. Export your journal or remove some photos, then try again. Nothing was deleted.')
     this.name = 'StorageFullError'
   }
 }

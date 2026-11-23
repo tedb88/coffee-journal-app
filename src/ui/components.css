@@ -1,4 +1,4 @@
-/* BrewMap components, from the BrewMap design system (components/bundle.css). Every value comes from tokens.css. */
+/* BrewNext components, from the BrewNext design system (components/bundle.css). Every value comes from tokens.css. */
 body { margin: 0; font-family: var(--font-sans); background: var(--ground); color: var(--ink); font-size: 14px; line-height: 20px; -webkit-font-smoothing: antialiased; }
 .bm-num { font-variant-numeric: tabular-nums; }
 .bm-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); box-sizing: border-box; }

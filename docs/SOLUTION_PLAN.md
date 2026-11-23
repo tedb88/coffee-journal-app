@@ -1,12 +1,12 @@
-# BrewMap — Feature & AI Solution Plan
+# BrewNext — Feature & AI Solution Plan
 
 | Field | Value |
 |---|---|
 | Document | Feature & AI Solution Plan |
-| Version | 0.2 — Draft for Product Owner review |
+| Version | 0.3 — Draft for Product Owner review (0.3: the product is named BrewNext, BRD D1) |
 | Date | 23 October 2026 |
 | Product Owner | tedb88 |
-| Input | [`BRD.md`](BRD.md) v0.3 (decisions D2, D4, D5, D6, D7, D11, D12 closed) |
+| Input | [`BRD.md`](BRD.md) v0.4 (decisions D1, D2, D4, D5, D6, D7, D11, D12 closed) |
 | Scope | How releases R0 (Foundation) and R1 (Daily Driver) will be built. R2 and later are covered only where R1 design choices affect them. |
 | Status | **Draft.** Decisions in §12 are needed before R0 starts. |
 
@@ -14,7 +14,7 @@
 
 ## 1. Executive Summary
 
-**What this plan covers.** How BrewMap moves from prototype to a product people can use every day in Hong Kong. It covers the target architecture, the design of each R1 feature, the design and model selection for each AI component, the evaluation approach, the cost model, and a sequenced backlog in which every item traces to a BRD requirement ID.
+**What this plan covers.** How BrewNext moves from prototype to a product people can use every day in Hong Kong. It covers the target architecture, the design of each R1 feature, the design and model selection for each AI component, the evaluation approach, the cost model, and a sequenced backlog in which every item traces to a BRD requirement ID.
 
 **Five design choices drive the plan:**
 

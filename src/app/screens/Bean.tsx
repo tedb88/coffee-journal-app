@@ -131,7 +131,7 @@ function BeanView({ bean, brews }: { bean: Bean; brews: Brew[] }) {
               Next brew
             </h2>
             <p className="lead">{isNew ? 'First brew of this bag' : plan.title}</p>
-            <p>{plan.kind === 'dialin' ? sentences(plan.advice?.detail, plan.why) : isNew ? 'BrewMap makes a recipe from what the label says.' : plan.why}</p>
+            <p>{plan.kind === 'dialin' ? sentences(plan.advice?.detail, plan.why) : isNew ? 'BrewNext makes a recipe from what the label says.' : plan.why}</p>
           </div>
           <div>
             <FigureStrip

@@ -274,7 +274,7 @@ describe('export and import (JRN-04)', () => {
 
   it('exports without photos by default and refuses other files', async () => {
     expect((await exportAll()).photos).toEqual([])
-    await expect(importAll({ format: 'something-else' })).rejects.toThrow(/not a BrewMap export/)
+    await expect(importAll({ format: 'something-else' })).rejects.toThrow(/not a BrewNext export/)
   })
 
   it('writes brews as CSV', async () => {

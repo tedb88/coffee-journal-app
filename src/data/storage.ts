@@ -1,4 +1,4 @@
-// Ask the browser to keep BrewMap's data (iOS can clear storage of sites that
+// Ask the browser to keep BrewNext's data (iOS can clear storage of sites that
 // are not installed, BRD C2) and report how full storage is (DR-05).
 
 export const STORAGE_WARN_RATIO = 0.8

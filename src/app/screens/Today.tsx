@@ -28,7 +28,7 @@ export function TodayScreen() {
       <div className="home-bar">
         <span className="brand">
           <Icon name="mark" size={26} />
-          BrewMap
+          BrewNext
         </span>
         <a className="bm-btn bm-btn-secondary bm-btn-md" href={href.scan()}>
           <Icon name="camera" size={18} />
@@ -148,7 +148,7 @@ function FirstBag() {
       <h2 id="first-bag" className="lead">
         Scan your first bag
       </h2>
-      <p>Take a photo of the label. BrewMap reads it and makes a V60 recipe for that coffee.</p>
+      <p>Take a photo of the label. BrewNext reads it and makes a V60 recipe for that coffee.</p>
       <a className="bm-btn bm-btn-primary bm-btn-lg bm-btn-full" href={href.scan()}>
         <Icon name="camera" size={18} />
         Scan bag
