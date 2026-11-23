@@ -2,7 +2,7 @@
 
 Scan a coffee bag, get a V60 recipe built for that coffee, and keep a journal and origin map of what you brew. Mobile-first web app for home brewers in Hong Kong.
 
-**Status: v0.3.1.** R0 (Foundation) made the prototype safe and solid: one rules engine, guaranteed-valid recipes, on-device storage with migration, abuse and spend protection, an AI gateway for open-weight models, tests, CI and an eval harness. v0.3.0 adds the redesigned key journey from [docs/UX_DESIGN.md](docs/UX_DESIGN.md): Today, scan and check, recipe, guided brew, taste with one change for next time, and the bag page, plus Beans, Journal and Map. See [CHANGELOG.md](CHANGELOG.md) for what is still to come.
+**Status: v0.3.2.** R0 (Foundation) made the prototype safe and solid: one rules engine, guaranteed-valid recipes, on-device storage with migration, abuse and spend protection, an AI gateway for open-weight models, tests, CI and an eval harness. v0.3.0 adds the redesigned key journey from [docs/UX_DESIGN.md](docs/UX_DESIGN.md): Today, scan and check, recipe, guided brew, taste with one change for next time, and the bag page, plus Beans, Journal and Map. See [CHANGELOG.md](CHANGELOG.md) for what is still to come.
 
 ## Documents (read these first)
 
@@ -54,7 +54,7 @@ All settings are server-side except `VITE_TURNSTILE_SITE_KEY`. See [.env.example
 | `npm run build` / `npm run preview` | Production build / serve it (no API) |
 | `npm run lint` · `npm run format` · `npm run typecheck` | ESLint · Prettier (new TypeScript code) · TypeScript |
 | `npm test` · `npm run test:coverage` | Unit and integration tests · with coverage thresholds |
-| `npm run e2e` | Playwright journeys on mobile Chromium (the key journey, failed scan, manual entry and log, migration, undo, brew mode) |
+| `npm run e2e` | Playwright journeys on mobile Chromium (the key journey, failed scan, manual entry and log, migration, undo, brew mode), and the phone layout check on every screen at 360–430 px |
 | `npm run eval:recipes` | Rules engine over the 50-case golden set (the CI gate). Add `-- --ai` to evaluate the configured AI model. |
 | `npm run eval:labels -- --photos DIR` | Vision model over the private label set ([evals/labels/README.md](evals/labels/README.md)) |
 | `npm run check` | Everything CI runs except the end-to-end tests |

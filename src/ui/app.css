@@ -1,15 +1,20 @@
 /* Screen layout for the BrewMap app: one column at phone width (390 px design). */
 *, *::before, *::after { box-sizing: border-box; }
 html, body, #root { height: 100%; }
+/* The page itself never moves under a finger: no bounce, no pull past the end, no
+   drag on the bars. Only each screen's own scroller scrolls (ADR-10 app shell). */
+html, body { overflow: hidden; overscroll-behavior: none; }
 body { margin: 0; font-family: var(--font-sans); background: var(--ground); color: var(--ink); font-size: 14px; line-height: 20px; -webkit-font-smoothing: antialiased; -webkit-text-size-adjust: 100%; }
 h1, h2, h3, p { margin: 0; }
 a { color: inherit; }
 button { font: inherit; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 
-.app { display: flex; flex-direction: column; height: 100%; max-width: 480px; margin: 0 auto; background: var(--ground); color: var(--ink); position: relative; }
+/* Fixed to the visible area, so a browser toolbar showing or hiding cannot leave the
+   page taller than the screen. Safe areas keep content clear of the notch and home bar. */
+.app { position: fixed; inset: 0; display: flex; flex-direction: column; max-width: 480px; margin: 0 auto; padding-top: env(safe-area-inset-top); background: var(--ground); color: var(--ink); }
 .screen { flex: 1; min-height: 0; display: flex; flex-direction: column; background: var(--ground); color: var(--ink); }
-.screen-scroll { flex: 1; min-height: 0; overflow-y: auto; padding: var(--space-1) var(--space-5) var(--space-6); display: flex; flex-direction: column; gap: var(--space-5); }
+.screen-scroll { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior-y: contain; padding: var(--space-1) var(--space-5) var(--space-6); display: flex; flex-direction: column; gap: var(--space-5); }
 .screen-scroll.tight { gap: var(--space-4); }
 .topbar { flex: none; min-height: 60px; display: flex; align-items: center; gap: var(--space-1); padding: var(--space-2) var(--space-3) 0; }
 .topbar-title { flex: 1; min-width: 0; font-size: 14px; line-height: 20px; font-weight: 500; color: var(--ink-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -17,7 +22,7 @@ button { font: inherit; }
 .home-bar { flex: none; display: flex; align-items: center; justify-content: space-between; min-height: 44px; padding: var(--space-4) var(--space-5) 0; }
 .brand { display: flex; align-items: center; gap: var(--space-2); font-size: 16px; font-weight: 600; color: var(--ink); }
 .brand .bm-icon { color: var(--water); }
-.pinned { flex: none; display: flex; flex-direction: column; gap: var(--space-1); padding: var(--space-3) var(--space-5) var(--space-5); background: var(--surface); border-top: 1px solid var(--border); }
+.pinned { flex: none; display: flex; flex-direction: column; gap: var(--space-1); padding: var(--space-3) var(--space-5) calc(var(--space-5) + env(safe-area-inset-bottom)); background: var(--surface); border-top: 1px solid var(--border); }
 .heading-block { display: flex; flex-direction: column; gap: var(--space-1); }
 .title { font-size: 24px; line-height: 30px; font-weight: 600; }
 .lead { font-size: 20px; line-height: 26px; font-weight: 600; }
@@ -75,7 +80,7 @@ button { font: inherit; }
 .camera-frame { position: relative; width: 100%; max-width: 350px; aspect-ratio: 350 / 440; border-radius: var(--radius-lg); background: var(--surface); display: flex; align-items: center; justify-content: center; overflow: hidden; }
 .camera-frame img { width: 100%; height: 100%; object-fit: cover; }
 .camera-corners { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
-.camera-bar { flex: none; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: center; padding: var(--space-4) var(--space-5) var(--space-8); }
+.camera-bar { flex: none; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: center; padding: var(--space-4) var(--space-5) max(var(--space-8), env(safe-area-inset-bottom)); }
 .camera-side { display: flex; flex-direction: column; align-items: center; gap: var(--space-1); min-width: 64px; min-height: 56px; border: 0; background: transparent; color: var(--ink); font-size: 13px; cursor: pointer; padding: var(--space-1); }
 .shutter { justify-self: center; width: 76px; height: 76px; border-radius: var(--radius-full); border: 3px solid var(--ink); background: transparent; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
 .shutter span { display: block; width: 60px; height: 60px; border-radius: var(--radius-full); background: var(--ink); }
@@ -84,13 +89,13 @@ button { font: inherit; }
 .brew-clock-time { font-size: 28px; line-height: 32px; font-weight: 500; font-variant-numeric: tabular-nums; }
 .brew-main { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 0 var(--space-5); }
 .brew-panel { flex: none; margin: 0 var(--space-5); padding: var(--space-4); border-radius: var(--radius-lg); background: var(--surface); display: flex; flex-direction: column; gap: var(--space-2); }
-.brew-controls { flex: none; display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-4) var(--space-5) var(--space-5); }
+.brew-controls { flex: none; display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-4) var(--space-5) calc(var(--space-5) + env(safe-area-inset-bottom)); }
 .brew-btn { height: var(--size-brew-button); border-radius: var(--radius-full); font-size: 17px; line-height: 22px; font-weight: 600; cursor: pointer; border: 1.5px solid var(--control); background: transparent; color: var(--ink); }
 .brew-btn-primary { background: var(--primary); color: var(--on-primary); border-color: var(--primary); }
 .brew-foot { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 12px; line-height: 16px; color: var(--ink-muted); text-align: center; }
 
 /* Toast with Undo (LOG-05) */
-.toast { position: absolute; left: var(--space-5); right: var(--space-5); bottom: calc(var(--size-nav) + var(--space-3)); z-index: 30; display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-2) var(--space-2) var(--space-2) var(--space-4); border-radius: var(--radius-md); background: var(--primary); color: var(--on-primary); box-shadow: var(--shadow-float); }
+.toast { position: absolute; left: var(--space-5); right: var(--space-5); bottom: calc(var(--size-nav) + var(--space-3) + env(safe-area-inset-bottom)); z-index: 30; display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-2) var(--space-2) var(--space-2) var(--space-4); border-radius: var(--radius-md); background: var(--primary); color: var(--on-primary); box-shadow: var(--shadow-float); }
 .toast .bm-btn { color: var(--on-primary); }
 
 /* Journal calendar */

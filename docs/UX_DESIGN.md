@@ -3,8 +3,8 @@
 | Field | Value |
 |---|---|
 | Document | UX design note for the key user journey |
-| Version | 0.1 — Draft for Product Owner review |
-| Date | 23 October 2026 |
+| Version | 0.2 — Draft for Product Owner review |
+| Date | 23 November 2026 (0.2: the screen stays still under a finger; 0.1: 23 October 2026) |
 | Inputs | [`BRD.md`](BRD.md) v0.3 · [`SOLUTION_PLAN.md`](SOLUTION_PLAN.md) v0.2 |
 | Prototype | Design canvas "BrewMap Key Journey": https://claude.ai/artifact/TE2JcqJmbvZwqvHzj9SMPH (private until shared from its Share menu) |
 | Design method | App-screen rules of the `design-taste-frontend` skill (leonxlnx/taste-skill, MIT), read from the upstream repository |
@@ -67,7 +67,7 @@ The full system is published as the **BrewMap design system**: https://claude.ai
 | Status | positive `#247B50`, notice `#FFFBEB` / `#FDE68A` / `#92400E` | Freshness dots; the "Check" flag on low-confidence fields |
 | Type | Manrope 400/500/600/700, tabular figures on every number (replaced IBM Plex Sans after review) | One family; sizes 12/13/14/16/20/24, plus 64 on the brew target only |
 | Shape | Cards 20 px radius, buttons and chips fully round, 44 px minimum touch target | One radius family |
-| Layout | 390 px phone, 20 px side margins, bottom nav of 4 (Today, Beans, Journal, Map) | Flow screens use a back button plus a pinned primary action |
+| Layout | 390 px phone design, working from 360 to 430 px; 20 px side margins, bottom nav of 4 (Today, Beans, Journal, Map) | Flow screens use a back button plus a pinned primary action. Only a screen's content scrolls: the page never moves, bounces or slides sideways under a finger, and bars clear the notch and home indicator (safe areas). Checked by `e2e/layout.spec.ts` |
 
 **Rules adopted from the taste skill:**
 - No gradients, glass, glows or emoji.

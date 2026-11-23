@@ -2,6 +2,15 @@
 
 All notable changes. Versions follow [Semantic Versioning](https://semver.org/).
 
+## [0.3.2] — 2026-11-23 · A screen that stays still
+
+### Fixed
+- On phones, the whole page could be dragged: it bounced when dragged on the top bar or bottom navigation, and slid with the bars when a list was pulled past its end. The page is now fixed to the screen and only each screen's content scrolls (UX design 0.2, NFR-04).
+- On iPhones with a home indicator, the bottom navigation, the pinned buttons, the brew controls and the Undo toast now sit above it (safe areas).
+
+### Added
+- `e2e/layout.spec.ts`: every screen at 360, 375, 393 and 430 px must have nothing wider than the screen, nothing cut off, and a page that does not move or bounce. It runs with `npm run e2e` and in CI.
+
 ## [0.3.1] — 2026-11-23 · Free label reading
 
 ### Fixed

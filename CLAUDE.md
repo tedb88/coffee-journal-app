@@ -25,5 +25,6 @@ BrewMap is built spec-first. The documents decide; the code implements them.
 - New code is TypeScript with `.js` import specifiers. Legacy JSX screens are replaced in R1.
 - Cite requirement IDs in tests and in comments where the reason is not obvious.
 - Every change ships with tests. Run `npm run check` and `npm run e2e` before committing.
+- Every front-end change is checked on a phone screen: `npm run e2e` runs `e2e/layout.spec.ts`, which walks every screen at 360, 375, 393 and 430 px and fails if anything is wider than the screen, cut off, or lets the page move. Add new screens to it, and look at screenshots at phone width before committing.
 - Prompt changes get a new version string in `api/_lib/ai/prompts.ts` and an eval run (`npm run eval:recipes -- --ai`, `npm run eval:labels`).
 - Commit messages say what changed and why, in the imperative. Do not put model or assistant identifiers in commits, code or docs.
