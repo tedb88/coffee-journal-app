@@ -2,7 +2,7 @@
 
 Scan a coffee bag, get a V60 recipe built for that coffee, and keep a journal and origin map of what you brew. Mobile-first web app for home brewers in Hong Kong.
 
-**Status: v0.3.0.** R0 (Foundation) made the prototype safe and solid: one rules engine, guaranteed-valid recipes, on-device storage with migration, abuse and spend protection, an AI gateway for open-weight models, tests, CI and an eval harness. v0.3.0 adds the redesigned key journey from [docs/UX_DESIGN.md](docs/UX_DESIGN.md): Today, scan and check, recipe, guided brew, taste with one change for next time, and the bag page, plus Beans, Journal and Map. See [CHANGELOG.md](CHANGELOG.md) for what is still to come.
+**Status: v0.3.1.** R0 (Foundation) made the prototype safe and solid: one rules engine, guaranteed-valid recipes, on-device storage with migration, abuse and spend protection, an AI gateway for open-weight models, tests, CI and an eval harness. v0.3.0 adds the redesigned key journey from [docs/UX_DESIGN.md](docs/UX_DESIGN.md): Today, scan and check, recipe, guided brew, taste with one change for next time, and the bag page, plus Beans, Journal and Map. See [CHANGELOG.md](CHANGELOG.md) for what is still to come.
 
 ## Documents (read these first)
 
@@ -35,7 +35,7 @@ All settings are server-side except `VITE_TURNSTILE_SITE_KEY`. See [.env.example
 | `AI_BASE_URL`, `AI_API_KEY`, `AI_SCAN_MODEL`, `AI_RECIPE_MODEL` | Primary OpenAI-compatible provider. Open-weight models only; others are rejected at run time (D7, AIP-9). |
 | `AI_PRICE_IN_PER_M`, `AI_PRICE_OUT_PER_M` | Provider prices in US$ per million tokens, for the spend cap |
 | `AI_FALLBACK_*` | Optional failover provider, same names |
-| `GROQ_API_KEY` | Legacy provider, tried last until the model migration (ADR-09). `AI_DISABLE_LEGACY_GROQ=true` switches it off. |
+| `GROQ_API_KEY` | Legacy provider. Groq has retired its models, so set `AI_DISABLE_LEGACY_GROQ=true`. |
 | `TURNSTILE_SECRET_KEY`, `VITE_TURNSTILE_SITE_KEY` | Cloudflare Turnstile bot check |
 | `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` | Shared counters for rate limits and spend (Vercel KV names also work) |
 | `AI_MONTHLY_CAP_USD` | Monthly AI spend cap; default 20 (D12) |
@@ -43,6 +43,8 @@ All settings are server-side except `VITE_TURNSTILE_SITE_KEY`. See [.env.example
 | `ALLOW_UNPROTECTED_AI` | `true` lets AI run in production without Turnstile and Upstash. Not recommended. |
 
 > **Production fails closed.** On a Vercel production deployment, AI stays off until Turnstile and Upstash are configured (ADR-06). The app keeps working with manual entry and rules recipes.
+
+**Free AI set-up (interim, ADR-09).** Cloudflare Workers AI's free plan with Mistral Small 3.1: `AI_BASE_URL=https://api.cloudflare.com/client/v4/accounts/<account id>/ai/v1`, a Workers AI API token as `AI_API_KEY`, `@cf/mistralai/mistral-small-3.1-24b-instruct` for both models, and both prices `0`. About 100 new bags a day are free.
 
 ## Scripts
 

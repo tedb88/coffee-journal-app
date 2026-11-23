@@ -80,6 +80,38 @@ describe('normaliseScan (AI-01)', () => {
     const parsed = ScanModelOutputSchema.parse({ fields: {}, confidence: { name: 'very sure' } })
     expect(parsed.confidence.name).toBe('low')
   })
+
+  it('drops evidence that is not plain text instead of rejecting the reading (AI-01)', () => {
+    const parsed = ScanModelOutputSchema.parse({
+      fields: { name: 'Hambela Alaka', tastingNotes: ['Strawberry', 'Jasmine'], roastDate: '14.10.26' },
+      evidence: { name: 'Hambela Alaka', tastingNotes: ['Strawberry', 'Jasmine'], roastDate: ['14.10.26'] },
+    })
+    expect(parsed.evidence).toEqual({ name: 'Hambela Alaka', tastingNotes: null, roastDate: null })
+    // A dropped quote never lets a value through the fabrication gate.
+    const r = normaliseScan(parsed, TODAY, META)
+    expect(r.flags.name).toBeUndefined()
+    expect(r.confidence.roastDate).toBe('low')
+    expect(r.flags.roastDate).toMatch(/Not clearly printed/)
+  })
+
+  it('treats evidence of the wrong shape as no evidence (AI-01)', () => {
+    const parsed = ScanModelOutputSchema.parse({ fields: { name: 'Hambela Alaka' }, evidence: 'Hambela Alaka' })
+    expect(parsed.evidence).toEqual({})
+    expect(normaliseScan(parsed, TODAY, META).flags.name).toMatch(/Not clearly printed/)
+  })
+
+  it('does not ask the user to check a field the label does not have (CAP-04)', () => {
+    const r = normaliseScan(
+      output({ fields: { ...output().fields, producer: null, varieties: [] }, confidence: { name: 'high', producer: 'null' as never, varieties: 'low' } }),
+      TODAY,
+      META,
+    )
+    expect(r.fields.producer).toBeNull()
+    expect(r.confidence.producer).toBeUndefined()
+    expect(r.flags.producer).toBeUndefined()
+    expect(r.flags.varieties).toBeUndefined()
+    expect(r.flags).toEqual({})
+  })
 })
 
 describe('parseWeightG', () => {

@@ -51,7 +51,10 @@ export const ScanModelOutputSchema = z.object({
     netWeight: loose,
   }),
   confidence: z.record(z.string(), level.catch('low')).default({}),
-  evidence: z.record(z.string(), z.string().nullable()).default({}),
+  // Some models quote list fields as lists. Evidence that is not plain text is
+  // dropped rather than failing the whole reading: dropping can only send a
+  // field to the fabrication gate, never let a guess through (AI-01).
+  evidence: z.record(z.string(), z.string().nullable().catch(null)).catch({}).default({}),
   labelLanguage: z.string().nullable().optional(),
   originalName: z.string().nullable().optional(),
 })
@@ -92,6 +95,10 @@ function text(v: unknown, max = 120): string | null {
   return s ? s.slice(0, max) : null
 }
 
+function filled(v: unknown): boolean {
+  return Array.isArray(v) ? v.some((x) => text(x) !== null) : text(v) !== null
+}
+
 /** "200 g", "250g", "12 oz", "1 lb" → grams. */
 export function parseWeightG(raw: unknown): number | null {
   const s = String(raw ?? '')
@@ -113,7 +120,9 @@ export function normaliseScan(out: ScanModelOutput, today: Date, meta: ScanResul
   const flags: ScanResult['flags'] = {}
   for (const key of SCAN_FIELDS) {
     const c = out.confidence?.[key]
-    if (c) confidence[key] = c
+    // CAP-04: a confidence for a field the model left empty (some send "null") would
+    // ask the user to check a blank field, so it is ignored.
+    if (c && filled(f[key])) confidence[key] = c
   }
 
   const country = normaliseCountry(text(f.origin))

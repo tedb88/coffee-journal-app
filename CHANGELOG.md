@@ -2,6 +2,18 @@
 
 All notable changes. Versions follow [Semantic Versioning](https://semver.org/).
 
+## [0.3.1] — 2026-11-23 · Free label reading
+
+### Fixed
+- Label reading no longer fails when the model quotes list fields (tasting notes, varieties) as lists in its evidence. That evidence is dropped instead, which can only send a field to the fabrication gate (AI-01).
+- Fields the label does not print are no longer flagged "Check it" because the model sent a confidence for them (CAP-04).
+
+### Changed
+- ADR-09 records the interim AI set-up: Cloudflare Workers AI's free plan with Mistral Small 3.1, chosen after testing five free models. Groq's models are retired, so `.env.example` now switches the legacy Groq provider off.
+
+### Known gaps
+- On Chinese and Japanese labels the interim model reads only part of the label and does not translate it; the user corrects the form. Scans take about 10 s. The bake-off (ADR-09) still decides the long-term model.
+
 ## [0.3.0] — 2026-11-15 · The redesigned key journey (R1, first cut)
 
 Built from the UX design note v0.1 and the BrewMap design system, on top of R0.
