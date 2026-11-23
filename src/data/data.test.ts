@@ -282,7 +282,8 @@ describe('export and import (JRN-04)', () => {
       bean: { source: 'scan', name: 'Hambela, "Alaka"', originCountry: 'ET', process: 'washed', roastLevel: 'light' },
       recipe,
     })
-    await addBrew({ beanId: bean.id, recipe, rating: 4, notes: 'Bright' })
+    // A minute later: two brews saved in the same millisecond have no defined order.
+    await addBrew({ beanId: bean.id, recipe, rating: 4, notes: 'Bright', createdAt: new Date(Date.now() + 60_000).toISOString() })
     const csv = (await brewsCsv()).split('\n')
     expect(csv[0]).toBe('date,coffee,origin,process,roast,dose_g,water_g,ratio,temp_c,grind,total_time,rating,notes')
     expect(csv[1]).toContain('"Hambela, ""Alaka""",Ethiopia,Washed,Light,15,240,1:16,94,Medium-fine,3:10,,')

@@ -2,6 +2,15 @@
 
 All notable changes. Versions follow [Semantic Versioning](https://semver.org/).
 
+## [0.3.3] — 2026-11-23 · Nothing spills off the bag page
+
+### Fixed
+- The bag page's next brew put a grind word ("Medium-fine", "Medium-coarse") in a quarter-width column. The word ran past the card and made the page slide sideways under a finger. Grind now has its own row, as on the recipe. On a 360 px phone, "20 clicks" also no longer pokes out of its column.
+- Figures that do not fit now wrap inside their column instead of spilling out, and a number never splits from its unit.
+
+### Changed
+- `e2e/layout.spec.ts` now measures text in the app's own font (Manrope, from `@fontsource/manrope`, test only), checks every scroller for sideways movement and every card and figure for content that spills out, and covers a bag brewed once with no grind clicks in light and dark mode. Version 0.3.2's test missed this because it ignored overflow inside scrollers and measured text in a narrower fallback font.
+
 ## [0.3.2] — 2026-11-23 · A screen that stays still
 
 ### Fixed

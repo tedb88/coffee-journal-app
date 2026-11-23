@@ -67,7 +67,7 @@ The full system is published as the **BrewMap design system**: https://claude.ai
 | Status | positive `#247B50`, notice `#FFFBEB` / `#FDE68A` / `#92400E` | Freshness dots; the "Check" flag on low-confidence fields |
 | Type | Manrope 400/500/600/700, tabular figures on every number (replaced IBM Plex Sans after review) | One family; sizes 12/13/14/16/20/24, plus 64 on the brew target only |
 | Shape | Cards 20 px radius, buttons and chips fully round, 44 px minimum touch target | One radius family |
-| Layout | 390 px phone design, working from 360 to 430 px; 20 px side margins, bottom nav of 4 (Today, Beans, Journal, Map) | Flow screens use a back button plus a pinned primary action. Only a screen's content scrolls: the page never moves, bounces or slides sideways under a finger, and bars clear the notch and home indicator (safe areas). Checked by `e2e/layout.spec.ts` |
+| Layout | 390 px phone design, working from 360 to 430 px; 20 px side margins, bottom nav of 4 (Today, Beans, Journal, Map) | Flow screens use a back button plus a pinned primary action. Only a screen's content scrolls: the page never moves, bounces or slides sideways under a finger, nothing spills out of its card (a word value such as a grind gets its own row), and bars clear the notch and home indicator (safe areas). Checked by `e2e/layout.spec.ts` |
 
 **Rules adopted from the taste skill:**
 - No gradients, glass, glows or emoji.

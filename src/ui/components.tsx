@@ -106,7 +106,8 @@ export function FigureStrip({ items, columns, bare }: { items: Figure[]; columns
           <span className="bm-fig-label">{f.label}</span>
           <span className="bm-fig-value">
             {f.value}
-            {f.unit ? <span className="bm-fig-unit"> {f.unit}</span> : null}
+            {/* A value that does not fit wraps inside its column rather than spilling out; the no-break space keeps "255 g" together. */}
+            {f.unit ? <span className="bm-fig-unit">{`\u00a0${f.unit}`}</span> : null}
           </span>
           {f.note ? <span className="bm-fig-note">{f.note}</span> : null}
         </div>

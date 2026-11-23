@@ -2,7 +2,7 @@
 
 Scan a coffee bag, get a V60 recipe built for that coffee, and keep a journal and origin map of what you brew. Mobile-first web app for home brewers in Hong Kong.
 
-**Status: v0.3.2.** R0 (Foundation) made the prototype safe and solid: one rules engine, guaranteed-valid recipes, on-device storage with migration, abuse and spend protection, an AI gateway for open-weight models, tests, CI and an eval harness. v0.3.0 adds the redesigned key journey from [docs/UX_DESIGN.md](docs/UX_DESIGN.md): Today, scan and check, recipe, guided brew, taste with one change for next time, and the bag page, plus Beans, Journal and Map. See [CHANGELOG.md](CHANGELOG.md) for what is still to come.
+**Status: v0.3.3.** R0 (Foundation) made the prototype safe and solid: one rules engine, guaranteed-valid recipes, on-device storage with migration, abuse and spend protection, an AI gateway for open-weight models, tests, CI and an eval harness. v0.3.0 adds the redesigned key journey from [docs/UX_DESIGN.md](docs/UX_DESIGN.md): Today, scan and check, recipe, guided brew, taste with one change for next time, and the bag page, plus Beans, Journal and Map. See [CHANGELOG.md](CHANGELOG.md) for what is still to come.
 
 ## Documents (read these first)
 

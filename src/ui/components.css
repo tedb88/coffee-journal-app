@@ -31,7 +31,7 @@ body { margin: 0; font-family: var(--font-sans); background: var(--ground); colo
 .bm-fig { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .bm-fig + .bm-fig { padding-left: var(--space-3); border-left: 1px solid var(--rule); }
 .bm-fig-label { font-size: 12px; line-height: 16px; font-weight: 500; color: var(--ink-muted); }
-.bm-fig-value { font-size: 20px; line-height: 26px; font-weight: 500; font-variant-numeric: tabular-nums; color: var(--ink); white-space: nowrap; }
+.bm-fig-value { font-size: 20px; line-height: 26px; font-weight: 500; font-variant-numeric: tabular-nums; color: var(--ink); overflow-wrap: anywhere; }
 .bm-fig-unit { font-size: 13px; font-weight: 400; color: var(--ink-muted); }
 .bm-fig-changed .bm-fig-label, .bm-fig-changed .bm-fig-value, .bm-fig-changed .bm-fig-unit { color: var(--water); }
 .bm-fig-changed .bm-fig-value { font-weight: 600; }

@@ -133,14 +133,19 @@ function BeanView({ bean, brews }: { bean: Bean; brews: Brew[] }) {
             <p className="lead">{isNew ? 'First brew of this bag' : plan.title}</p>
             <p>{plan.kind === 'dialin' ? sentences(plan.advice?.detail, plan.why) : isNew ? 'BrewMap makes a recipe from what the label says.' : plan.why}</p>
           </div>
-          <FigureStrip
-            items={[
-              { label: 'Coffee', value: next.doseG, unit: 'g', changed: changed('doseG') },
-              { label: 'Water', value: next.waterG, unit: 'g', changed: changed('waterG') },
-              { label: 'Temp', value: next.tempC, unit: '°C', changed: changed('tempC') },
-              { label: 'Grind', ...grindFigure, changed: changed('grind') },
-            ]}
-          />
+          <div>
+            <FigureStrip
+              items={[
+                { label: 'Coffee', value: next.doseG, unit: 'g', changed: changed('doseG') },
+                { label: 'Water', value: next.waterG, unit: 'g', changed: changed('waterG') },
+                { label: 'Temp', value: next.tempC, unit: '°C', changed: changed('tempC') },
+              ]}
+            />
+            {/* Grind can be a word ("Medium-coarse"), too wide for a quarter of a phone: its own row, as on the recipe. */}
+            <div style={{ paddingTop: 'var(--space-3)' }}>
+              <FigureStrip bare columns={1} items={[{ label: 'Grind', ...grindFigure, changed: changed('grind') }]} />
+            </div>
+          </div>
           <a className="bm-btn bm-btn-primary bm-btn-lg bm-btn-full" href={href.recipe(bean.id)}>
             {freshRecipe ? 'Make a recipe' : 'Brew again'}
           </a>
